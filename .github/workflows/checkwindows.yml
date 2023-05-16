@@ -53,10 +53,10 @@ jobs:
          cd c:\temp\harbour32
          mingw32-make clean install
          cd c:\temp\hwgui
-         hbmk2 hwgui.hbp
-         hbmk2 hbxml.hbp
-         hbmk2 procmisc.hbp
-         hbmk2 hwgdebug.hbp
+         hbmk2 hwgui.hbp -w0
+         hbmk2 hbxml.hbp -w0
+         hbmk2 procmisc.hbp -w0
+         hbmk2 hwgdebug.hbp -w0
 
     #- name: Build 64 bits
     #  env:
