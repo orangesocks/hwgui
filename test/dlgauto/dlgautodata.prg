@@ -3,7 +3,7 @@
 #include "dbstruct.ch"
 #include "dlgauto.ch"
 
-CREATE CLASS DlgAutoMain INHERIT DlgAutoBtn, DlgAutoEdit
+CREATE CLASS DlgAutoData INHERIT DlgAutoBtn, DlgAutoEdit, DlgAutoPrint
 
    VAR nDlgWidth    INIT 1024
    VAR nDlgHeight   INIT 768
@@ -11,9 +11,9 @@ CREATE CLASS DlgAutoMain INHERIT DlgAutoBtn, DlgAutoEdit
    VAR cFileDBF
    VAR aEditList INIT {}
    METHOD Execute()
-   METHOD View()    INLINE Nil
-   METHOD Edit()
-   METHOD Delete()      INLINE Nil
+   METHOD View()        INLINE Nil
+   METHOD Edit()        INLINE ::EditOn()
+   METHOD Delete()
    METHOD Insert()      INLINE Nil
    METHOD First()       INLINE &( ::cFileDbf )->( dbgotop() ),    ::EditUpdate()
    METHOD Last()        INLINE &( ::cFileDbf )->( dbgobottom() ), ::EditUpdate()
@@ -21,18 +21,24 @@ CREATE CLASS DlgAutoMain INHERIT DlgAutoBtn, DlgAutoEdit
    METHOD Previous()    INLINE &( ::cFileDbf )->( dbSkip( -1 ) ), ::EditUpdate()
    METHOD Exit()        INLINE ::oDlg:Close()
    METHOD Save()
-   METHOD Cancel()
+   METHOD Cancel()      INLINE ::EditOff(), ::EditUpdate()
    VAR oDlg
 
    ENDCLASS
 
-METHOD Edit() CLASS DlgAutoMain
+METHOD Delete() CLASS DlgAutoData
 
-   ::EditOn()
+   IF hwg_MsgYesNo( "Delete" )
+      IF rLock()
+         DELETE
+         SKIP 0
+         UNLOCK
+      ENDIF
+   ENDIF
 
    RETURN Nil
 
-METHOD Save() CLASS DlgAutoMain
+METHOD Save() CLASS DlgAutoData
 
    LOCAL aItem
 
@@ -50,18 +56,23 @@ METHOD Save() CLASS DlgAutoMain
 
    RETURN Nil
 
-METHOD Cancel() CLASS DlgAutoMain
+METHOD Execute() CLASS DlgAutoData
 
-   ::EditOff()
-   ::EditUpdate()
-
-   RETURN Nil
-
-METHOD Execute() CLASS DlgAutoMain
+   LOCAL aItem
 
    SELECT 0
    USE ( ::cFileDBF )
-   ::EditSetup()
+   FOR EACH aItem IN ::aEditList
+      IF ! Empty( aItem[ 7 ] )
+         IF Select( aItem[ 7 ] ) == 0
+            SELECT 0
+            USE ( aItem[ 7 ] )
+            SET INDEX TO ( aItem[ 7 ] )
+            SET ORDER TO 1
+         ENDIF
+      ENDIF
+   NEXT
+   SELECT ( Select( ::cFileDbf ) )
 
    INIT DIALOG ::oDlg CLIPPER NOEXIT TITLE ::cTitle ;
       AT 0, 0 SIZE ::nDlgWidth, ::nDlgHeight ;

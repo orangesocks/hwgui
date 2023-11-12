@@ -14,6 +14,7 @@ INC_DIR = include
 OBJ_DIR = obj
 LIB_DIR = lib
 SRC_DIR = source\winapi
+CROSS_DIR = source\cross
 PROCMISC_DIR = source\common\procmisc
 EDITOR_DIR = source\common\editor
 HBXML_DIR    = source\common\xml
@@ -52,6 +53,7 @@ $(LIB_DIR)/libhwgui.a : \
    $(OBJ_DIR)/shellapi.o \
    $(OBJ_DIR)/window.o \
    $(OBJ_DIR)/wprint.o \
+   $(OBJ_DIR)/common.o \
    $(OBJ_DIR)/drawwidg.o \
    $(OBJ_DIR)/herrsys.o \
    $(OBJ_DIR)/guimain.o \
@@ -64,12 +66,16 @@ $(LIB_DIR)/libhwgui.a : \
    $(OBJ_DIR)/hcontrol.o \
    $(OBJ_DIR)/hcwindow.o \
    $(OBJ_DIR)/hdatepic.o \
+   $(OBJ_DIR)/hdrawn.o \
+   $(OBJ_DIR)/hdrawnbrw.o \
+   $(OBJ_DIR)/hdrawncomb.o \
    $(OBJ_DIR)/hdialog.o \
    $(OBJ_DIR)/hedit.o \
    $(OBJ_DIR)/hfreeimg.o \
    $(OBJ_DIR)/hfrmtmpl.o \
    $(OBJ_DIR)/hgraph.o \
    $(OBJ_DIR)/hgrid.o \
+   $(OBJ_DIR)/htrack.o \
    $(OBJ_DIR)/htrackbr.o \
    $(OBJ_DIR)/hanimat.o \
    $(OBJ_DIR)/hlistbox.o \
@@ -110,6 +116,7 @@ $(LIB_DIR)/libprocmisc.a : \
    $(OBJ_DIR)/procscri.o \
    $(OBJ_DIR)/scrdebug.o \
    $(OBJ_DIR)/hcedit.o \
+   $(OBJ_DIR)/hceditb.o \
    $(OBJ_DIR)/hcedit_w.o \
    $(OBJ_DIR)/hilight.o \
    $(OBJ_DIR)/cfuncs.o
@@ -137,6 +144,9 @@ $(OBJ_DIR)/%.c : $(SRC_DIR)/%.prg
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	gcc $(CFLAG) -c -I$(INC_DIR) -I$(HRB_DIR)/include -o $@ $^
+
+$(OBJ_DIR)/%.c : $(CROSS_DIR)/%.prg
+	$(HRB_EXE) $^ -n -w -I$(HRB_DIR)/include -i$(INC_DIR) $(HARBOURFLAG) -o$@ $^
 
 $(OBJ_DIR)/%.c : $(PROCMISC_DIR)/%.prg
 	$(HRB_EXE) $^ -n -w -I$(HRB_DIR)/include -i$(INC_DIR) $(HARBOURFLAG) -o$@ $^

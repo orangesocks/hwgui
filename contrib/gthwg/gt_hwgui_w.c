@@ -154,6 +154,7 @@ typedef struct
    int      CaretWidth;     /* Width of solid caret */
 
    POINT    MousePos;       /* the last mouse position */
+   POINT    ExactMousePos;  /* the last mouse position in pixels*/
 
    int      CodePage;       /* Code page to use for display characters */
 
@@ -179,6 +180,8 @@ static int iNewWidth = -1, iNewHeight = -1;
 
 static int s_GtId;
 static HB_GT_FUNCS SuperTable;
+
+static PHB_DYNS s_pSymTest_paint = NULL;
 
 #define HB_GTSUPER   ( &SuperTable )
 #define HB_GTID_PTR  ( &s_GtId )
@@ -249,7 +252,32 @@ static HFONT gthwg_GetFont( LPCTSTR lpFace, int iHeight, int iWidth, int iWeight
       return (HFONT) hb_parptr( -1 );
    }
    return NULL;
+}
 
+static int gthwg_PaintCB( HDC hdc )
+{
+
+   if( hb_dynsymIsFunction( s_pSymTest_paint ) )
+   {
+      hb_vmPushDynSym( s_pSymTest_paint );
+      hb_vmPushNil();   /* places NIL at self */
+      hb_vmPushPointer( ( void * ) hdc );
+      hb_vmDo( 1 );
+      return hb_parni( -1 );
+   }
+   return -1;
+}
+
+HB_FUNC( GTHWG_PAINT_SETCALLBACK )
+{
+   if( hb_pcount() > 0 && HB_ISCHAR(1) )
+   {
+      s_pSymTest_paint = hb_dynsymGetCase( hb_parc(1) );
+   }
+   else
+   {
+      s_pSymTest_paint = NULL;
+   }
 }
 
 #if ! defined( UNICODE )
@@ -420,6 +448,9 @@ static void gthwg_MouseEvent( PHB_GTHWG pHWG, UINT message, WPARAM wParam, LPARA
 
    if( message == WM_MOUSEWHEEL )
       ScreenToClient( pHWG->hWnd, &xy );
+
+   pHWG->ExactMousePos.y = xy.y;
+   pHWG->ExactMousePos.x = xy.x;
 
    colrow = gthwg_GetColRowFromXY( pHWG, xy.x, xy.y );
    if( gthwg_SetMousePos( pHWG, colrow.y, colrow.x ) )
@@ -1127,6 +1158,10 @@ static void gthwg_PaintText( PHB_GTHWG pHWG )
       if( len > 0 )
          gthwg_TextOut( pHWG, hdc, startCol, iRow, iOldColor, pHWG->TextLine, ( UINT ) len );
    }
+
+   if( s_pSymTest_paint )
+      gthwg_PaintCB( hdc );
+
    EndPaint( pHWG->hWnd, &ps );
 }
 
@@ -1799,6 +1834,14 @@ static HB_BOOL hb_gt_hwg_Info( PHB_GT pGT, int iType, PHB_GT_INFO pInfo )
          }
          break;
       }
+
+      case HB_GTI_MOUSEPOS_XY:
+         if( ! pInfo->pResult )
+            pInfo->pResult = hb_itemNew( NULL );
+         hb_arrayNew( pInfo->pResult, 2 );
+         hb_arraySetNI( pInfo->pResult, 1, pHWG->ExactMousePos.x );
+         hb_arraySetNI( pInfo->pResult, 2, pHWG->ExactMousePos.y );
+         break;
 
       case HB_GTI_WINHANDLE:
          pInfo->pResult = hb_itemPutPtr( pInfo->pResult, pHWG->hWnd );

@@ -6,7 +6,7 @@
  *
  * Copyright 2004 Alexander S.Kresin <alex@kresin.ru>
  * www - http://www.kresin.ru
- * 
+ *
  * Some debugging info:
  *
  * Write messages to console window by example:
@@ -56,6 +56,7 @@
 #define WM_KEYDOWN                      256    // 0x0100
 #define WM_KEYUP                        257    // 0x0101
 #define WM_MOUSEMOVE                    512    // 0x0200
+#define WM_MOUSELEAVE                   675    // 0x02A3
 #define WM_LBUTTONDOWN                  513    // 0x0201
 #define WM_LBUTTONUP                    514    // 0x0202
 #define WM_LBUTTONDBLCLK                515    // 0x0203
@@ -136,7 +137,7 @@ HB_FUNC( HWG_INITMAINWINDOW )
    GtkWidget * hWnd ;
    GtkWidget * vbox;
    GtkFixed * box;
-#if GTK_MAJOR_VERSION -0 < 3   
+#if GTK_MAJOR_VERSION -0 < 3
    GdkPixmap * background;
 #else
    /* GdkPixbuf * background; */
@@ -158,42 +159,42 @@ HB_FUNC( HWG_INITMAINWINDOW )
 
    /* Background style*/
    style = gtk_style_new();
-   
+
    if (szBackFile)
    {
-#if GTK_MAJOR_VERSION -0 < 3 
-      /* GTK 2 */  
+#if GTK_MAJOR_VERSION -0 < 3
+      /* GTK 2 */
       gdk_pixbuf_render_pixmap_and_mask(szBackFile->handle, &background, NULL, 0);
       if ( ! background ) g_error("%s\n","Error loading background image");
       style->bg_pixmap[0] = background ;
 #endif
    }
-  
-#if GTK_MAJOR_VERSION -0 < 3  
+
+#if GTK_MAJOR_VERSION -0 < 3
    hWnd = ( GtkWidget * ) gtk_window_new( GTK_WINDOW_TOPLEVEL );
 #else
   app = gtk_application_new ("net.sourceforge.projects.hwgui.gtk.sample", G_APPLICATION_FLAGS_NONE);
   hWnd = gtk_application_window_new (app);
 //  gtk_window_set_default_size (GTK_WINDOW (hWnd), 200, 200);
-// hwg_writelog(NULL,"Hier");   
-  gtk_widget_show_all (hWnd);  
+// hwg_writelog(NULL,"Hier");
+  gtk_widget_show_all (hWnd);
 #endif
 
-  
+
 #if ! ( GTK_MAJOR_VERSION -0 < 3 )
   /* GTK 3 */
-  /* To be contiued  
+  /* To be contiued
 //  background = gtk_image_new_from_file( szBackFile->handle );
 
   if ( background )
    gdk_window_set_back_pixmap( GDK_WINDOW (hWnd), background, (gboolean) TRUE);
   */
 #endif
-   
+
    gtk_window_set_title( GTK_WINDOW(hWnd), gcTitle );
-  
+
    g_free( gcTitle );
- 
+
    //gtk_window_set_policy( GTK_WINDOW(hWnd), TRUE, TRUE, FALSE );
    gtk_window_set_resizable( GTK_WINDOW(hWnd), TRUE);
    gtk_window_set_default_size( GTK_WINDOW(hWnd), width, height );
@@ -247,8 +248,8 @@ HB_FUNC( HWG_INITMAINWINDOW )
    HB_RETHANDLE( hWnd );
 }
 
-/* 
-  hwg_CreateDlg(nhandle) 
+/*
+  hwg_CreateDlg(nhandle)
 */
 
 HB_FUNC( HWG_CREATEDLG )
@@ -299,12 +300,12 @@ HB_FUNC( HWG_CREATEDLG )
    }
 
    hWnd = ( GtkWidget * ) gtk_window_new( GTK_WINDOW_TOPLEVEL );
-   
-   
+
+
 #if ! ( GTK_MAJOR_VERSION -0 < 3 )
   /* GTK 3 */
   background = gtk_image_new_from_pixbuf( szBackFile->handle );
-  /* To be contiued 
+  /* To be contiued
   if ( background )
      gdk_window_set_back_pixmap( GDK_WINDOW (hWnd), background, (gboolean) TRUE);
   */
@@ -335,7 +336,7 @@ HB_FUNC( HWG_CREATEDLG )
 
    gtk_widget_add_events( hWnd, GDK_BUTTON_PRESS_MASK |
          GDK_BUTTON_RELEASE_MASK |
-         GDK_POINTER_MOTION_MASK | GDK_FOCUS_CHANGE );
+         GDK_POINTER_MOTION_MASK | GDK_FOCUS_CHANGE_MASK );
    set_event( ( gpointer ) hWnd, "button_press_event", 0, 0, 0 );
    set_event( ( gpointer ) hWnd, "button_release_event", 0, 0, 0 );
    set_event( ( gpointer ) hWnd, "motion_notify_event", 0, 0, 0 );
@@ -345,6 +346,7 @@ HB_FUNC( HWG_CREATEDLG )
 
    set_event( (gpointer)hWnd, "configure_event", 0, 0, 0 );
    set_event( (gpointer)hWnd, "focus_in_event", 0, 0, 0 );
+   set_event( ( gpointer )hWnd, "focus_out_event", 0, 0, 0 );
 
    g_signal_connect( box, "size-allocate", G_CALLBACK (cb_signal_size), NULL );
    //g_signal_connect( hWnd, "size-allocate", G_CALLBACK (cb_signal_size), NULL );
@@ -406,10 +408,16 @@ HB_FUNC( HWG_PROCESSMESSAGE )
 
 gint cb_signal_size( GtkWidget *widget, GtkAllocation *allocation, gpointer data )
 {
-   gpointer gObject = g_object_get_data( (GObject*)
-      gtk_widget_get_parent( gtk_widget_get_parent(widget) ), "obj" );
+   gpointer gObject; // = g_object_get_data( (GObject*)
+      //gtk_widget_get_parent( gtk_widget_get_parent(widget) ), "obj" );
    //gpointer gObject = g_object_get_data( (GObject*) widget, "obj" );
-   HB_SYMBOL_UNUSED( data );
+   //HB_SYMBOL_UNUSED( data );
+
+   if( data )
+      gObject = g_object_get_data( (GObject*) widget, "obj" );
+   else
+      gObject = g_object_get_data( (GObject*)
+         gtk_widget_get_parent( gtk_widget_get_parent(widget) ), "obj" );
 
    if( !pSym_onEvent )
       pSym_onEvent = hb_dynsymFindName( "ONEVENT" );
@@ -731,11 +739,19 @@ static gint cb_event( GtkWidget *widget, GdkEvent * event, gchar* data )
                  ( ( ((GdkEventConfigure*)event)->y << 16 ) & 0xFFFF0000 );
          }
       }
-      else if( event->type == GDK_ENTER_NOTIFY || event->type == GDK_LEAVE_NOTIFY )
+      else if( event->type == GDK_LEAVE_NOTIFY ) // event->type == GDK_ENTER_NOTIFY ||
+      {
+         p1 = WM_MOUSELEAVE;
+         p2 = 0;
+         //p2 = ( ((GdkEventCrossing*)event)->state & GDK_BUTTON1_MASK )? 1:0 |
+         //     ( event->type == GDK_ENTER_NOTIFY )? 0x10:0;
+         p3 = ( ((HB_ULONG)(((GdkEventCrossing*)event)->x)) & 0xFFFF ) | ( ( ((HB_ULONG)(((GdkEventMotion*)event)->y)) << 16 ) & 0xFFFF0000 );
+      }
+      else if( event->type == GDK_ENTER_NOTIFY )
       {
          p1 = WM_MOUSEMOVE;
-         p2 = ( ((GdkEventCrossing*)event)->state & GDK_BUTTON1_MASK )? 1:0 |
-              ( event->type == GDK_ENTER_NOTIFY )? 0x10:0;
+         p2 = 0;
+         p2 = ( ( ((GdkEventCrossing*)event)->state & GDK_BUTTON1_MASK )? 1:0 ) | 0x10;
          p3 = ( ((HB_ULONG)(((GdkEventCrossing*)event)->x)) & 0xFFFF ) | ( ( ((HB_ULONG)(((GdkEventMotion*)event)->y)) << 16 ) & 0xFFFF0000 );
       }
       else if( event->type == GDK_FOCUS_CHANGE )
@@ -1130,6 +1146,15 @@ HB_FUNC( HWG__ISUNICODE )
 #endif
 }
 
+HB_FUNC( HWG_WIDGET_GET_TOP )
+{
+   GtkWidget *widget = (GtkWidget*) HB_PARHANDLE(1);
+   gint y;
+
+   gdk_window_get_origin( gtk_widget_get_window (widget), NULL, &y );
+   hb_retni( y );
+}
+
 HB_FUNC( HWG_INITPROC )
 {
    s_KeybHook = gtk_key_snooper_install( &snooper, NULL );
@@ -1145,7 +1170,7 @@ HB_FUNC( HWG_DEICONIFY ) /* maximize  */
 gtk_window_deiconify(  (GtkWindow*) (HB_PARHANDLE(1) ) );
 }
 
-HB_FUNC( HWG_ICONIFY )   /* minimize */ 
+HB_FUNC( HWG_ICONIFY )   /* minimize */
 {
 gtk_window_iconify(  (GtkWindow*) (HB_PARHANDLE(1) ) );
 }
@@ -1155,12 +1180,12 @@ gtk_window_iconify(  (GtkWindow*) (HB_PARHANDLE(1) ) );
   * TOOLTIP not supported
   * Comment out for experimental purposes
   */
-/*  
+/*
 HB_FUNC( HWG_SHELLMODIFYICON )
 {
 
 
-  PHWGUI_PIXBUF szFile = HB_ISPOINTER(2) ? (PHWGUI_PIXBUF) HB_PARHANDLE(2): NULL; 
+  PHWGUI_PIXBUF szFile = HB_ISPOINTER(2) ? (PHWGUI_PIXBUF) HB_PARHANDLE(2): NULL;
   if (szFile)
    {
         gtk_window_set_icon( (GtkWindow*) (HB_PARHANDLE(1) ), szFile->handle);

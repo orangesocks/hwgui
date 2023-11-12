@@ -81,7 +81,7 @@ CLASS HColumn INHERIT HObject
    DATA oStyleHead               // An HStyle object to draw the header
    DATA oStyleFoot               // An HStyle object to draw the footer
    DATA oStyleCell               // An HStyle object to draw the cell
-   DATA aPaintCB                 // An array with codeblocks to paint column items: { nId, cId, bDraw }
+   DATA oPaintCB                 // HPaintCB object
    DATA aBitmaps
 
    DATA bValid, bWhen            // When and Valid codeblocks for cell editing
@@ -94,11 +94,11 @@ CLASS HColumn INHERIT HObject
 
    DATA bHeadClick
    DATA bColorBlock              //   bColorBlock must return an array containing four colors values
-   //   oBrowse:aColumns[1]:bColorBlock := {|| IF (nNumber < 0, ;
-   //      {textColor, backColor, textColorSel, backColorSel} , ;
-   //      {textColor, backColor, textColorSel, backColorSel} ) }
+   //  The 5-th and 6-th members are to select current column, if ::lEditable is On.
+   //  oBrowse:aColumns[1]:bColorBlock := {|| IF (nNumber < 0, ;
+   //     {textColor, backColor, textColorRowSel, backColorRowSel, textColorColSel, backColorColSel} , ;
+   //     {textColor, backColor, textColorRowSel, backColorRowSel, textColorColSel, backColorColSel} ) }
    METHOD New( cHeading, block, type, length, dec, lEditable, nJusHead, nJusLin, cPict, bValid, bWhen, aItem, bColorBlock, bHeadClick )
-   METHOD SetPaintCB( nId, block, cId )
 
 ENDCLASS
 
@@ -115,43 +115,18 @@ METHOD New( cHeading, block, type, length, dec, lEditable, nJusHead, nJusLin, cP
    ::picture   := cPict
    ::bValid    := bValid
    ::bWhen     := bWhen
-   ::aList     := aItem
+   IF !Empty( aItem )
+      ::aList := aItem
+      ::lEditable := .T.
+   ENDIF
    ::bColorBlock := bColorBlock
    ::bHeadClick  := bHeadClick
 
    RETURN Self
 
-METHOD SetPaintCB( nId, block, cId ) CLASS HColumn
-
-   LOCAL i, nLen
-
-   IF Empty( cId ); cId := "_"; ENDIF
-   IF Empty( ::aPaintCB ); ::aPaintCB := {}; ENDIF
-
-   nLen := Len( ::aPaintCB )
-   FOR i := 1 TO nLen
-      IF ::aPaintCB[i,1] == nId .AND. ::aPaintCB[i,2] == cId
-         EXIT
-      ENDIF
-   NEXT
-   IF Empty( block )
-      IF i <= nLen
-         ADel( ::aPaintCB, i )
-         ::aPaintCB := ASize( ::aPaintCB, nLen - 1 )
-      ENDIF
-   ELSE
-      IF i > nLen
-         AAdd( ::aPaintCB, { nId, cId, block } )
-      ELSE
-         ::aPaintCB[i,3] := block
-      ENDIF
-   ENDIF
-
-   RETURN Nil
-
 CLASS HBrowse INHERIT HControl
 
-   DATA winclass   INIT "BROWSE"
+   DATA winclass   INIT "HBOARD"
    DATA active     INIT .T.
    DATA lChanged   INIT .F.
    DATA lDispHead  INIT .T.                    // Should I display headers ?
@@ -297,7 +272,7 @@ METHOD New( lType, oWndParent, nId, nStyle, nLeft, nTop, nWidth, nHeight, oFont,
       ::aSelected := {}
    ENDIF
 
-   hwg_RegBrowse()
+   hwg_RegBoard()
    ::InitBrw()
    ::Activate()
 
@@ -315,7 +290,7 @@ METHOD DefaultLang() CLASS HBrowse
 METHOD Activate() CLASS HBrowse
 
    IF !Empty( ::oParent:handle )
-      ::handle := hwg_Createbrowse( ::oParent:handle, ::id, ;
+      ::handle := hwg_CreateBoard( ::oParent:handle, ::id, ;
          ::style, ::nLeft, ::nTop, ::nWidth, ::nHeight )
       ::Init()
    ENDIF
@@ -324,13 +299,18 @@ METHOD Activate() CLASS HBrowse
 
 METHOD onEvent( msg, wParam, lParam )  CLASS HBrowse
 
-   LOCAL nPos, iParHigh, iParLow
+   LOCAL nPos, iParHigh, iParLow, nRet
 
    //hwg_WriteLog( "Brw: " + Str(msg,6) +" "+Str(hwg_PtrToUlong(wParam),10)+" "+Str(hwg_PtrToUlong(lParam),10) )
    IF ::active .AND. !Empty( ::aColumns )
 
-      IF ::bOther != Nil
-         Eval( ::bOther, Self, msg, wParam, lParam )
+       IF ::bOther != NIL
+         IF ValType( nRet := Eval( ::bOther, Self, msg, wParam, lParam ) ) != "N"
+            nRet := iif( ValType( nRet ) = "L" .AND. ! nRet, 0, - 1 )
+         ENDIF
+         IF nRet >= 0
+            RETURN - 1
+         ENDIF
       ENDIF
 
       IF msg == WM_PAINT
@@ -418,11 +398,14 @@ METHOD onEvent( msg, wParam, lParam )  CLASS HBrowse
          ELSEIF wParam == 17
             ::lCtrlPress := .T.
             // fim bloco sauli
-         ELSEIF ::lAutoEdit .AND. ( wParam >= 48 .AND. wParam <= 90 .OR. wParam >= 96 .AND. wParam <= 111 )
-            ::Edit( wParam, lParam )
          ENDIF
          RETURN 1
 
+      ELSEIF msg == WM_CHAR
+         wParam := hwg_PtrToUlong( wParam )
+         IF ::lAutoEdit .AND. wParam >= 33 .AND. wParam <= 126
+            ::Edit( wParam, lParam )
+         ENDIF
       ELSEIF msg == WM_LBUTTONDBLCLK
          ::ButtonDbl( lParam )
 
@@ -475,7 +458,7 @@ METHOD Redefine( lType, oWndParent, nId, oFont, bInit, bSize, bPaint, bEnter, bG
    ::bGetFocus  := bGFocus
    ::bLostFocus := bLFocus
 
-   hwg_RegBrowse()
+   hwg_RegBoard()
    ::InitBrw()
 
    RETURN Self
@@ -788,6 +771,9 @@ METHOD Paint( lLostFocus )  CLASS HBrowse
          tmp := Eval( ::bRecno, Self )
          IF ::rowPos > 1
             Eval( ::bSkip, Self, - ( ::rowPos - 1 ) )
+            IF Eval( ::bBof, Self )
+               Eval( ::bGoTop, Self )
+            ENDIF
          ENDIF
          i := 1
          l := .F.
@@ -884,13 +870,15 @@ METHOD Paint( lLostFocus )  CLASS HBrowse
 METHOD DrawHeader( hDC, nColumn, x1, y1, x2, y2 ) CLASS HBrowse
 
    LOCAL cStr, oColumn := ::aColumns[nColumn], cNWSE, nLine, ya, yb
-   LOCAL nHeight := ::nRowTextHeight, aCB := oColumn:aPaintCB, block, i
+   LOCAL nHeight := ::nRowTextHeight, oCB := oColumn:oPaintCB, aCB, block, i
 
-   IF !Empty( block := hwg_getPaintCB( aCB, PAINT_HEAD_ALL ) )
+   //IF !Empty( block := hwg_getPaintCB( aCB, PAINT_HEAD_ALL ) )
+   IF !Empty( oCB ) .AND. !Empty( block := oCB:Get( PAINT_HEAD_ALL ) )
       RETURN Eval( block, oColumn, hDC, x1, y1, x2, y2, nColumn )
    ENDIF
 
-   IF !Empty( block := hwg_getPaintCB( aCB, PAINT_HEAD_BACK ) )
+   //IF !Empty( block := hwg_getPaintCB( aCB, PAINT_HEAD_BACK ) )
+   IF !Empty( oCB ) .AND. !Empty( block := oCB:Get( PAINT_HEAD_BACK ) )
       Eval( block, oColumn, hDC, x1, y1, x2, y2, nColumn )
    ELSEIF oColumn:oStyleHead != Nil
       oColumn:oStyleHead:Draw( hDC, x1, y1, x2, y2 )
@@ -938,7 +926,8 @@ METHOD DrawHeader( hDC, nColumn, x1, y1, x2, y2 ) CLASS HBrowse
    ENDIF
    hwg_Settransparentmode( hDC, .F. )
 
-   IF !Empty( aCB := hwg_getPaintCB( aCB, PAINT_HEAD_ITEM ) )
+   //IF !Empty( aCB := hwg_getPaintCB( aCB, PAINT_HEAD_ITEM ) )
+   IF !Empty( oCB ) .AND. !Empty( aCB := oCB:Get( PAINT_HEAD_ITEM ) )
       FOR i := 1 TO Len( aCB )
          Eval( aCB[i], oColumn, hDC, x1, y1, x2, y2, nColumn )
       NEXT
@@ -949,7 +938,8 @@ METHOD DrawHeader( hDC, nColumn, x1, y1, x2, y2 ) CLASS HBrowse
 METHOD HeaderOut( hDC ) CLASS HBrowse
 
    LOCAL i, x, y1, oldc, fif, xSize
-   LOCAL nRows := Min( ::nRecords + iif( ::lAppMode,1,0 ), ::rowCount )
+   //LOCAL nRows := Min( ::nRecords + iif( ::lAppMode,1,0 ), ::rowCount )
+   LOCAL nRows := ::rowCurrCount
    LOCAL oldBkColor := hwg_Setbkcolor( hDC, hwg_Getsyscolor( COLOR_3DFACE ) )
 
    IF ::lDispSep
@@ -1008,7 +998,7 @@ METHOD HeaderOut( hDC ) CLASS HBrowse
 METHOD FooterOut( hDC ) CLASS HBrowse
 
    LOCAL i, x, x2, y1, y2, fif, xSize, nLine
-   LOCAL oColumn, aCB, block
+   LOCAL oColumn, oCB, aCB, block
 
    IF ::lDispSep
       hwg_Selectobject( hDC, ::oPenSep:handle )
@@ -1028,11 +1018,13 @@ METHOD FooterOut( hDC ) CLASS HBrowse
          xSize := Max( ::x2 - x, xSize )
       ENDIF
       x2 := x + xSize - 1
-      aCB := oColumn:aPaintCB
-      IF !Empty( block := hwg_getPaintCB( aCB, PAINT_FOOT_ALL ) )
+      oCB := oColumn:oPaintCB
+      //IF !Empty( block := hwg_getPaintCB( aCB, PAINT_FOOT_ALL ) )
+      IF !Empty( oCB ) .AND. !Empty( block := oCB:Get( PAINT_FOOT_ALL ) )
          RETURN Eval( block, oColumn, hDC, x, y1, x2, y2, fif )
       ELSE
-         IF !Empty( block := hwg_getPaintCB( aCB, PAINT_FOOT_BACK ) )
+         //IF !Empty( block := hwg_getPaintCB( aCB, PAINT_FOOT_BACK ) )
+         IF !Empty( oCB ) .AND. !Empty( block := oCB:Get( PAINT_FOOT_BACK ) )
             Eval( block, oColumn, hDC, x, y1, x2, y2, fif )
          ELSEIF oColumn:oStyleFoot != Nil
             oColumn:oStyleFoot:Draw( hDC, x, y1, x2, y2 )
@@ -1060,7 +1052,8 @@ METHOD FooterOut( hDC ) CLASS HBrowse
             ENDIF
             hwg_Settransparentmode( hDC, .F. )
          ENDIF
-         IF !Empty( aCB := hwg_getPaintCB( aCB, PAINT_FOOT_ITEM ) )
+         //IF !Empty( aCB := hwg_getPaintCB( aCB, PAINT_FOOT_ITEM ) )
+         IF !Empty( oCB ) .AND. !Empty( aCB := oCB:Get( PAINT_FOOT_ITEM ) )
             FOR i := 1 TO Len( aCB )
                Eval( aCB[i], oColumn, hDC, x, y1, x2, y2, fif )
             NEXT
@@ -1098,7 +1091,7 @@ METHOD LineOut( nstroka, vybfld, hDC, lSelected, lClear ) CLASS HBrowse
    LOCAL oBrushLine := iif( lSelected, ::brushSel, ::brush )
    LOCAL oBrushSele := iif( vybfld >= 1, HBrush():Add( ::htbColor ), Nil )
    LOCAL lColumnFont := .F.
-   LOCAL aCores, oColumn, aCB, block
+   LOCAL aCores, oColumn, oCB, aCB, block
 
    x := ::x1
    IF lClear == Nil ; lClear := .F. ; ENDIF
@@ -1135,14 +1128,16 @@ METHOD LineOut( nstroka, vybfld, hDC, lSelected, lClear ) CLASS HBrowse
             xSize := Max( ::x2 - x + 1, xSize )
          ENDIF
 
-         aCB := oColumn:aPaintCB
+         oCB := oColumn:oPaintCB
          x2 := x + xSize - iif( ::lSep3d, 2, 1 )
          y1 := ::y1 + ( ::height + 1 ) * ( nstroka - 1 ) + 1
          y2 := ::y1 + ( ::height + 1 ) * nstroka
-         IF !Empty( block := hwg_getPaintCB( aCB, PAINT_LINE_ALL ) )
+         //IF !Empty( block := hwg_getPaintCB( aCB, PAINT_LINE_ALL ) )
+         IF !Empty( oCB ) .AND. !Empty( block := oCB:Get(PAINT_LINE_ALL ) )
             Eval( block, oColumn, hDC, x, y1, x2, y2, nCol )
          ELSE
-            IF !Empty( block := hwg_getPaintCB( aCB, PAINT_LINE_BACK ) )
+            //IF !Empty( block := hwg_getPaintCB( aCB, PAINT_LINE_BACK ) )
+            IF !Empty( oCB ) .AND. !Empty( block := oCB:Get(PAINT_LINE_BACK ) )
                Eval( block, oColumn, hDC, x, y1, x2, y2, nCol )
             ELSEIF oColumn:oStyleCell != Nil
                oColumn:oStyleCell:Draw( hDC, x, y1, x2, y2 )
@@ -1195,7 +1190,8 @@ METHOD LineOut( nstroka, vybfld, hDC, lSelected, lClear ) CLASS HBrowse
                      hwg_Drawtext( hDC, sviv, x + ::aPadding[1], y1 + ::aPadding[2], x2 - ::aPadding[3], y2 - 1 - ::aPadding[4], oColumn:nJusLin )
                      hwg_Settransparentmode( hDC, .F. )
                   ENDIF
-                  IF !Empty( aCB := hwg_getPaintCB( aCB, PAINT_LINE_ITEM ) )
+                  //IF !Empty( aCB := hwg_getPaintCB( aCB, PAINT_LINE_ITEM ) )
+                  IF !Empty( oCB ) .AND. !Empty( aCB := oCB:Get(PAINT_LINE_ITEM ) )
                      FOR j := 1 TO Len( aCB )
                         Eval( aCB[j], oColumn, hDC, x, y1, x2, y2, nCol )
                      NEXT
@@ -1413,7 +1409,7 @@ METHOD LINEDOWN( lMouse ) CLASS HBrowse
       ENDIF
 
       IF ::lAppable .AND. ::lEditable .AND. ( lMouse == Nil .OR. !lMouse ) .AND. ;
-            ( ::type != BRW_DATABASE .OR. !Dbinfo(DBI_ISREADONLY) )
+            ( ::type != BRW_DATABASE .OR. !( ::alias ) -> (Dbinfo(DBI_ISREADONLY)) )
          colpos := 1
          DO WHILE colpos <= Len( ::aColumns ) .AND. !::aColumns[colpos]:lEditable
             colpos ++
@@ -1866,7 +1862,7 @@ METHOD Edit( wParam, lParam ) CLASS HBrowse
          RETURN Nil
       ENDIF
       IF ::type == BRW_DATABASE
-         IF Dbinfo(DBI_ISREADONLY)
+         IF ( ::alias ) -> (Dbinfo(DBI_ISREADONLY))
             RETURN Nil
          ENDIF
          ::varbuf := ( ::alias ) -> ( Eval( oColumn:block,,Self,fipos ) )
@@ -1910,7 +1906,7 @@ METHOD Edit( wParam, lParam ) CLASS HBrowse
 
          lReadExit := Set( _SET_EXIT, .T. )
          bInit := iif( wParam == Nil, { |o|hwg_Movewindow( o:handle,x1,y1,nWidth,o:nHeight + 1 ) }, ;
-            { |o|hwg_Movewindow( o:handle, x1, y1, nWidth, o:nHeight + 1 ), hwg_Postmessage( o:aControls[1]:handle, WM_KEYDOWN, wParam, lParam ) } )
+            { |o|hwg_Movewindow( o:handle, x1, y1, nWidth, o:nHeight + 1 ), hwg_Postmessage( o:aControls[1]:handle, WM_CHAR, wParam, lParam ) } )
 
          IF type <> "M"
             INIT DIALOG oModDlg;
@@ -2350,26 +2346,3 @@ STATIC FUNCTION CountToken( cStr, nMaxLen, nCount )
    ENDIF
 
    RETURN cStr
-
-FUNCTION hwg_getPaintCB( arr, nId )
-
-   LOCAL i, nLen, aRes
-
-   IF !Empty( arr )
-      nLen := Len( arr )
-      FOR i := 1 TO nLen
-         IF arr[i,1] == nId
-            IF nId < PAINT_LINE_ITEM
-               RETURN arr[i,3]
-            ELSE
-               IF aRes == Nil
-                  aRes := { arr[i,3] }
-               ELSE
-                  AAdd( aRes, arr[i,3] )
-               ENDIF
-            ENDIF
-         ENDIF
-      NEXT
-   ENDIF
-
-   RETURN aRes

@@ -35,6 +35,10 @@
 #define  FIRST_MDICHILD_ID     501
 #define  WND_MDICHILD          3
 
+#if defined( __USE_GDIPLUS )
+extern void hwg_GdiplusExit( void );
+#endif
+
 static LRESULT CALLBACK s_MainWndProc( HWND, UINT, WPARAM, LPARAM );
 static LRESULT CALLBACK s_FrameWndProc( HWND, UINT, WPARAM, LPARAM );
 static LRESULT CALLBACK s_MDIChildWndProc( HWND, UINT, WPARAM, LPARAM );
@@ -62,7 +66,7 @@ static void s_ClearKeyboard( void )
 {
    MSG msg;
 
-   // For keyboard 
+   // For keyboard
    while( PeekMessage( &msg, ( HWND ) NULL, WM_KEYFIRST, WM_KEYLAST,
                PM_REMOVE ) );
    // For Mouse
@@ -113,8 +117,8 @@ HB_FUNC( HWG_INITMAINWINDOW )
             LoadIcon( ( HINSTANCE ) hInstance, TEXT( "" ) );
       wndclass.hCursor = LoadCursor( NULL, IDC_ARROW );
       wndclass.hbrBackground = ( hb_pcount(  ) > 5 && !HB_ISNIL( 6 ) ) ?
-            ( ( hb_parnl( 6 ) == -1 ) ? ( HBRUSH ) NULL : 
-            ( HB_ISPOINTER( 6 )? ( HBRUSH ) HB_PARHANDLE( 6 ) : 
+            ( ( hb_parnl( 6 ) == -1 ) ? ( HBRUSH ) NULL :
+            ( HB_ISPOINTER( 6 )? ( HBRUSH ) HB_PARHANDLE( 6 ) :
             ( HBRUSH ) hb_parnl( 6 ) ) ) : ( HBRUSH ) ( COLOR_WINDOW + 1 );
       wndclass.lpszMenuName = lpMenu;
       wndclass.lpszClassName = lpAppName;
@@ -1499,14 +1503,16 @@ HB_FUNC( HWG_EXITPROC )
       UnhookWindowsHookEx( s_KeybHook );
       s_KeybHook = NULL;
    }
-
+#if defined( __USE_GDIPLUS )
+   hwg_GdiplusExit();
+#endif
 }
 
-/* 
+/*
    hwg_SetApplocale()
    GTK only, for WinAPI empty function body
-   for compatibility purpose 
-*/   
+   for compatibility purpose
+*/
 HB_FUNC( HWG_SETAPPLOCALE )
 {
 }

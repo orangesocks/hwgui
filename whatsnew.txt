@@ -1,9 +1,47 @@
+             $Id$
+
                       HWGUI - Harbour Win32 GUI library
                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                        What's new in the last version
                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-                                   $Id$
+
+HWGUI 2.23 build 6 ( 07.11.2023 )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[+] HDateSelect, HDrawnDate classes added - a crossplatform HDatePicker alternative
+[*] Many enhancements in drawn widgets
+[*] Anchors support added for drawn widgets
+[*] Tutor has been enhanced
+[*] Documentation updated
+[!] Fixes
+
+HWGUI 2.23 build 5 ( 05.10.2023 )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[+] Few drawing functions added, few modified
+[+] New commands added for new classes: 
+ @ ... DRAWN EDIT ..., @ ... DRAWN LENTA ..., @ ... DRAWN TRACK ...,
+ @ ... DRAWN BROWSE ..., @ ... DRAWN COMBO ..., @ ... DRAWN UPDOWN ...
+[+] New classes added: HDrawnEdit, HDrawnLenta, HDrawnCheck, HDrawnBrw, HDrawnCombo, HDrawnUpdown
+    tutorial updated to demonstrate it
+[*] Documentation updated
+[*] Part of a code, which is fully crossplatform, is moved from gtk/ and winapi/ directories
+    to a new cross/ directory
+[!] Fixes
+
+HWGUI 2.23 build 4 ( 27.07.2023 )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[+] Gdi+ basic support added for Mingw C compiler to allow to open png and tiff files
+[+] New commands added for new classes: 
+ @ ... BOARD ..., @ ... DRAWN ..., @ ... DRAWN CHECK ..., @ ... DRAWN RADIO ...
+[+] New classes added: HBoard, HDrawn, HDrawnCheck, HDrawnRadio,
+    samples/graph.prg updated to demonstrate it
+[!] Few important fixes in GTK drawing
+
+HWGUI 2.23 build 3 ( 10.07.2023 )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[*] Painting possibility added to GTHWG
+[*] Progress in GTK3 support
+[!] Some warnings and bugs fixed, cleanup
 
 HWGUI recent code snapshot
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

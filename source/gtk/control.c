@@ -60,6 +60,7 @@ extern void set_signal( gpointer handle, char *cSignal, long int p1,
 extern void set_event( gpointer handle, char *cSignal, long int p1,
       long int p2, long int p3 );
 extern void cb_signal( GtkWidget * widget, gchar * data );
+extern gint cb_signal_size( GtkWidget *widget, GtkAllocation *allocation, gpointer data );
 extern void all_signal_connect( gpointer hWnd );
 extern GtkWidget *GetActiveWindow( void );
 extern GdkPixbuf *alpha2pixbuf( GdkPixbuf * hPixIn, long int nColor );
@@ -367,12 +368,12 @@ HB_FUNC( HWG_EDIT_GETTEXT )
 HB_FUNC( HWG_EDIT_SETPOS )
 {
    gtk_editable_set_position( ( GtkEditable * ) HB_PARHANDLE( 1 ),
-         hb_parni( 2 ) );
+         hb_parni( 2 ) - 1 );
 }
 
 HB_FUNC( HWG_EDIT_GETPOS )
 {
-   hb_retni( gtk_editable_get_position( ( GtkEditable * ) HB_PARHANDLE( 1 ) ) );
+   hb_retni( gtk_editable_get_position( ( GtkEditable * ) HB_PARHANDLE( 1 ) ) + 1 );
 }
 
 HB_FUNC( HWG_EDIT_GETSELPOS )
@@ -767,7 +768,7 @@ HB_FUNC( HWG_ADDTAB )
    GtkWidget *box = gtk_fixed_new(  );
    GtkWidget *hLabel;
    char * cLabel = hwg_convert_to_utf8( hb_parc( 2 ) );
-   
+
    char * cTooltip = ( ( HB_ISNIL(2) ) ? NULL :  hwg_convert_to_utf8(hb_parc(3) ) );
 
    hLabel = gtk_label_new( cLabel );
@@ -776,7 +777,7 @@ HB_FUNC( HWG_ADDTAB )
    gtk_notebook_append_page( nb, box, hLabel );
 
    g_object_set_data( ( GObject * ) nb, "fbox", ( gpointer ) box );
-   
+
    /* Tooltip */
    if (cTooltip)
        gtk_widget_set_tooltip_text( (GtkWidget * ) nb, cTooltip );
@@ -958,23 +959,20 @@ HB_FUNC( HWG_CREATEOWNBTN )
 
    hCtrl = gtk_drawing_area_new();
    g_object_set_data( ( GObject * ) hCtrl, "draw", ( gpointer ) hCtrl );
-
    box = getFixedBox( ( GObject * ) HB_PARHANDLE( 1 ) );
+
    if( box )
-   {
       gtk_fixed_put( box, hCtrl, hb_parni( 3 ), hb_parni( 4 ) );
-      gtk_widget_set_size_request( hCtrl, hb_parni( 5 ), hb_parni( 6 ) );
-   }
+   gtk_widget_set_size_request( hCtrl, hb_parni( 5 ), hb_parni( 6 ) );
+
 #if GTK_MAJOR_VERSION -0 < 3
    set_event( ( gpointer ) hCtrl, "expose_event", WM_PAINT, 0, 0 );
 #else
    set_event( ( gpointer ) hCtrl, "draw", WM_PAINT, 0, 0 );
 #endif
    gtk_widget_set_can_focus(hCtrl,1);
-   //GTK_WIDGET_SET_FLAGS( hCtrl, GTK_CAN_FOCUS );
    gtk_widget_add_events( hCtrl, GDK_BUTTON_PRESS_MASK |
-         GDK_BUTTON_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK |
-         GDK_LEAVE_NOTIFY_MASK );
+         GDK_BUTTON_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK );
    set_event( ( gpointer ) hCtrl, "button_press_event", 0, 0, 0 );
    set_event( ( gpointer ) hCtrl, "button_release_event", 0, 0, 0 );
    set_event( ( gpointer ) hCtrl, "enter_notify_event", 0, 0, 0 );
@@ -1010,7 +1008,7 @@ HB_FUNC( HWG_DELTOOLTIP )
 HB_FUNC( HWG_SETTOOLTIPTITLE )
 {
    gchar *gcTitle = hwg_convert_to_utf8( hb_parcx( 2 ) );
-   
+
     gtk_widget_set_tooltip_text( ( GtkWidget * ) HB_PARHANDLE( 1 ), gcTitle );
 
    g_free( gcTitle );
@@ -1394,7 +1392,6 @@ HB_FUNC( HWG_GETMONTHCALENDARDATE )
    hb_retds( szDate );
 }
 
-
 HB_FUNC( HWG_CREATEIMAGE )
 {
    GtkWidget *hCtrl;
@@ -1504,6 +1501,7 @@ HB_FUNC( HWG_SETBGCOLOR )
    }
 }
 #endif
+
 /*
    CreateSplitter( hParentWindow, nControlID, nStyle, x, y, nWidth, nHeight )
 */
@@ -1546,6 +1544,49 @@ HB_FUNC( HWG_CREATESPLITTER )
    set_event( ( gpointer ) hCtrl, "button_press_event", 0, 0, 0 );
    set_event( ( gpointer ) hCtrl, "button_release_event", 0, 0, 0 );
    set_event( ( gpointer ) hCtrl, "motion_notify_event", 0, 0, 0 );
+
+   all_signal_connect( ( gpointer ) hCtrl );
+   HB_RETHANDLE( hCtrl );
+
+}
+
+/*
+   CreateBoard( hParentWindow, nId, nStyle, x, y, nWidth, nHeight )
+*/
+HB_FUNC( HWG_CREATEBOARD )
+{
+   GtkWidget *hCtrl;
+   GtkFixed *box;
+
+   hCtrl = gtk_drawing_area_new();
+   g_object_set_data( ( GObject * ) hCtrl, "draw", ( gpointer ) hCtrl );
+   box = getFixedBox( ( GObject * ) HB_PARHANDLE( 1 ) );
+
+   if( box )
+      gtk_fixed_put( box, hCtrl, hb_parni( 4 ), hb_parni( 5 ) );
+   gtk_widget_set_size_request( hCtrl, hb_parni( 6 ), hb_parni( 7 ) );
+
+#if GTK_MAJOR_VERSION -0 < 3
+   set_event( ( gpointer ) hCtrl, "expose_event", WM_PAINT, 0, 0 );
+#else
+   set_event( ( gpointer ) hCtrl, "draw", WM_PAINT, 0, 0 );
+#endif
+   gtk_widget_set_can_focus(hCtrl,1);
+
+   gtk_widget_add_events( hCtrl, GDK_BUTTON_PRESS_MASK |
+         GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK |
+         GDK_FOCUS_CHANGE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_SCROLL_MASK );
+   g_signal_connect( hCtrl, "size-allocate", G_CALLBACK (cb_signal_size), "1" );
+   set_event( ( gpointer ) hCtrl, "focus_in_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "focus_out_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "key_press_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "key_release_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "scroll_event", 0, 0, 0 );
+
+   set_event( ( gpointer ) hCtrl, "button_press_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "button_release_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "motion_notify_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "leave_notify_event", 0, 0, 0 );
 
    all_signal_connect( ( gpointer ) hCtrl );
    HB_RETHANDLE( hCtrl );

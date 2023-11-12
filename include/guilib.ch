@@ -3,11 +3,11 @@
  */
 /*
   ========== Define HWGUI release version ============
-*/ 
-/* For note of latest official release version number */  
-#define HWG_VERSION         "2.23 dev"
+*/
+/* For note of latest official release version number */
+#define HWG_VERSION         "2.23"
 /* For note of latest official release build */
-#define HWG_BUILD               3
+#define HWG_BUILD               6
 /* ----- End of HWGUI version definition ----- */
 
 #define	WND_MAIN                1
@@ -25,6 +25,10 @@
 #define	OBTN_NORMAL             1
 #define	OBTN_MOUSOVER           2
 #define	OBTN_PRESSED            3
+
+#define	BMP_DRAW_SPREAD         0
+#define	BMP_DRAW_CENTER         1
+#define	BMP_DRAW_FULL           2
 
 #define SHS_NOISE               0
 #define SHS_DIAGSHADE           1
@@ -281,8 +285,8 @@
                        <nHeight>,<maxpos>,<nRange> );
             [; hwg_SetCtrlName( <oPBar>,<(oPBar)> )]
 
-            
-#xcommand REDEFINE progress  [ <oBmp>  ] ;            
+
+#xcommand REDEFINE progress  [ <oBmp>  ] ;
             [ OF <oWnd> ]              ;
             ID <nId>                   ;
             [ ON INIT <bInit> ]        ;
@@ -293,9 +297,9 @@
           => ;
     [<oBmp> := ] HProgressBar():Redefine( <oWnd>,<nId>,<mpos>,<nRange>, ;
         <bInit>,<bSize>,,<ctoolt> );
-    [; hwg_SetCtrlName( <oBmp>,<(oBmp)> )]            
-        
-            
+    [; hwg_SetCtrlName( <oBmp>,<(oBmp)> )]
+
+
 #xcommand ADD STATUS [<oStat>] [ TO <oWnd> ] ;
             [ ID <nId> ]           ;
             [ ON INIT <bInit> ]    ;
@@ -443,6 +447,7 @@
             [ SIZE <width>, <height> ] ;
             [ COLOR <color> ]          ;
             [ BACKCOLOR <bcolor> ]     ;
+            [ PICTURE <cPicture> ]     ;
             [ ON INIT <bInit> ]        ;
             [ ON SIZE <bSize> ]        ;
             [ ON GETFOCUS <bGfocus> ]  ;
@@ -457,7 +462,7 @@
           => ;
     [<oEdit> := ] HEdit():New( <oWnd>,<nId>,<caption>,,<nStyle>,<x>,<y>,<width>, ;
                     <height>,<oFont>,<bInit>,<bSize>,<bGfocus>, ;
-                    <bLfocus>,<ctoolt>,<color>,<bcolor>,,<.lnoborder.>,,<.lPassword.>, <bKeyDown>, <bChange> );
+                    <bLfocus>,<ctoolt>,<color>,<bcolor>,<cPicture>,<.lnoborder.>,,<.lPassword.>, <bKeyDown>, <bChange> );
     [; hwg_SetCtrlName( <oEdit>,<(oEdit)> )]
 
 
@@ -483,7 +488,7 @@
             [ SIZE <width>, <height> ] ;
             [ COLOR <color> ]          ;
             [ BACKCOLOR <bcolor> ]     ;
-            [<lallowtabs: ALLOWTABS>]  ; 
+            [<lallowtabs: ALLOWTABS>]  ;
             [ ON INIT <bInit> ]        ;
             [ ON SIZE <bSize> ]        ;
             [ ON GETFOCUS <bGfocus> ]  ;
@@ -603,7 +608,7 @@
     <oTab>:StartPage( <cname> )
 
 #ifdef __GTK__
-    
+
 #xcommand BEGIN PAGE <cname> OF <oTab> TOOLTIP <ctooltip>;
           => ;
     <oTab>:StartPage( <cname> , <ctooltip> )
@@ -1121,6 +1126,21 @@
         <color>,<bcolor> );
     [; hwg_SetCtrlName( <oPick>,<(oPick)> )]
 
+#xcommand @ <x>,<y> DATESELECT [ <oDate> ] ;
+            [ OF <oWnd> ]              ;
+            [ ID <nId> ]               ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ FONT <oFont> ]           ;
+            [ INIT  <dValue> ]         ;
+            [ ON SIZE <bSize> ]        ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CHANGE <bChange> ]    ;
+          => ;
+    [<oDate> := ] HDateSelect():New( <oWnd>,<nId>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <oFont>,<dValue>,<bSize>,<bDraw>,<bChange> );
+    [; hwg_SetCtrlName( <oDate>,<(oDate)> )]
 
 #xcommand @ <x>,<y> SPLITTER [ <oSplit> ] ;
             [ OF <oWnd> ]              ;
@@ -1599,7 +1619,7 @@ Added by Marcos Antonio Gambeta
              <bInit>,<bClick>,<caption>,<ctoolt>,<r>,<g>,<b> );
     [; hwg_SetCtrlName( <oBut>,<(oBut)> )]
 
-// trackbar control
+// trackbar control (deprecated)
 #xcommand @ <x>,<y> TRACKBAR [ <oTrackBar> ]  ;
             [ OF <oWnd> ]                 ;
             [ ID <nId> ]                  ;
@@ -1626,6 +1646,24 @@ Added by Marcos Antonio Gambeta
         Iif(<.both.>,8,Iif(<.top.>.or.<.left.>,4,0)) );
     [; hwg_SetCtrlName( <oTrackBar>,<(oTrackBar)> )]
 
+// trackbar control
+#xcommand @ <x>,<y> TRACK [ <oTrack> ]    ;
+            [ OF <oWnd> ]                 ;
+            [ ID <nId> ]                  ;
+            [ SIZE <width>, <height> ]    ;
+            [ COLOR <color> ]             ;
+            [ BACKCOLOR <bcolor> ]        ;
+            [ SLIDER SIZE <nsize> ]       ;
+            [ SLIDER HSTYLE <ostyles> ]   ;
+            [ BAR HSTYLE <ostyleb> ]      ;
+            [<laxis: AXIS>]               ;
+            [ ON SIZE <bSize> ]           ;
+            [ ON PAINT <bDraw> ]          ;
+          => ;
+    [<oTrack> :=] HTrack():New( <oWnd>,<nId>,<x>,<y>, ;
+        <width>,<height>,<bSize>,<bDraw>,<color>, <bcolor>, <nsize>, <ostyleb>, <ostyles>, <.laxis.> );
+    [; hwg_SetCtrlName( <oTrack>,<(oTrack)> )]
+
 // animation control
 #xcommand @ <x>,<y>  ANIMATION [ <oAnimation> ] ;
             [ OF <oWnd> ]                       ;
@@ -1649,7 +1687,7 @@ Added by Marcos Antonio Gambeta
 //New Control
 #xcommand @ <x>,<y> SAY [ <oSay> CAPTION ] <caption> ;
             [ OF <oWnd> ]              ;
-            LINK <cLink>               ;   
+            LINK <cLink>               ;
             [ ID <nId> ]               ;
             [ SIZE <width>, <height> ] ;
             [ COLOR <color> ]          ;
@@ -1674,7 +1712,7 @@ Added by Marcos Antonio Gambeta
 #xcommand REDEFINE SAY [ <oSay> CAPTION ] <cCaption>      ;
             [ OF <oWnd> ]              ;
             ID <nId>                   ;
-            LINK <cLink>               ;   
+            LINK <cLink>               ;
             [ COLOR <color> ]          ;
             [ BACKCOLOR <bcolor> ]     ;
             [<lTransp: TRANSPARENT>]   ;
@@ -1776,7 +1814,7 @@ Added by Marcos Antonio Gambeta
           => ;
     [<oSay> := ] HStatus():Redefine( <oWnd>,<nId>,,  ,<bInit>,<bSize>,<bDraw>, , , , ,\{<bChange>\} ) ;
     [; hwg_SetCtrlName( <oSay>,<(oSay)> )]
-                                                                                      
+
 
 #xcommand REDEFINE GRID  <oSay>  ;
             [ OF <oWnd> ]              ;
@@ -1857,5 +1895,200 @@ Added by Marcos Antonio Gambeta
        <oFont>,<bInit>,<bSize>,<bDraw>,<color>,<bcolor>,<bGfocus>,<bLfocus>, ;
        <.lNoVScr.>,<.lNoBord.> );
     [; hwg_SetCtrlName( <oTEdit>,<(oTEdit)> )]
+
+#xcommand @ <x>,<y> LENTA [ <oLenta> ] ;
+            [ OF <oWnd> ]              ;
+            [ ID <nId> ]               ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ ON SIZE <bSize> ]        ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CLICK <bClick> ]      ;
+            [ FONT <oFont> ]           ;
+            [ ITEMS <aItems> ]         ;
+            [ ITEMSIZE <nItemSize> ]   ;
+            [ HSTYLES <aItemStyle> ]   ;
+          => ;
+    [<oLenta> := ] HLenta():New( <oWnd>,<nId>,<x>,<y>,<width>, ;
+        <height>,<oFont>,<bSize>,<bDraw>,<bClick>,<color>,<bcolor>,<aItems>,<nItemSize>,<aItemStyle> );
+    [; hwg_SetCtrlName( <oLenta>,<(oLenta)> )]
+
+#xcommand @ <x>,<y> BOARD [ <oBoard> ] ;
+            [ OF <oWnd> ]              ;
+            [ ID <nId> ]               ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ ON INIT <bInit> ]        ;
+            [ ON SIZE <bSize> ]        ;
+            [ ON PAINT <bDraw> ]       ;
+            [ FONT <oFont> ]           ;
+            [ TOOLTIP <ctoolt> ]       ;
+          => ;
+    [<oBoard> := ] HBoard():New( <oWnd>,<nId>,<x>,<y>,<width>, ;
+        <height>,<oFont>,<bInit>,<bSize>,<bDraw>,<ctoolt>,<color>,<bcolor> );
+    [; hwg_SetCtrlName( <oBoard>,<(oBoard)> )]
+
+#xcommand @ <x>,<y> DRAWN [ <oDrawn> ] ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ HSTYLES <aStyles> ]      ;
+            [ TEXT <cText> ]           ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CLICK <bClick> ]      ;
+            [ ON CHANGESTATE <bChg> ]  ;
+            [ FONT <oFont> ]           ;
+          => ;
+    [<oDrawn> := ] HDrawn():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <aStyles>,<cText>,<oFont>,<bDraw>,<bClick>,<bChg> );
+    [; hwg_SetCtrlName( <oDrawn>,<(oDrawn)> )]
+
+#xcommand @ <x>,<y> DRAWN CHECK [ <oDrawn> ] ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ HSTYLES <aStyles> ]      ;
+            [ TEXT <cText> ]           ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CLICK <bClick> ]      ;
+            [ ON CHANGESTATE <bChg> ]  ;
+            [ FONT <oFont> ]           ;
+          => ;
+    [<oDrawn> := ] HDrawnCheck():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <aStyles>,<cText>,<oFont>,<bDraw>,<bClick>,<bChg> );
+    [; hwg_SetCtrlName( <oDrawn>,<(oDrawn)> )]
+
+#xcommand @ <x>,<y> DRAWN RADIO [ <oDrawn> ] ;
+            [ OF <oWnd> ]              ;
+            GROUP <xGroup>             ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ HSTYLES <aStyles> ]      ;
+            [ TEXT <cText> ]           ;
+            [ INIT <lInit> ]           ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CLICK <bClick> ]      ;
+            [ ON CHANGESTATE <bChg> ]  ;
+            [ FONT <oFont> ]           ;
+          => ;
+    [<oDrawn> := ] HDrawnRadio():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <aStyles>,<cText>,<oFont>,<bDraw>,<bClick>,<bChg>,<xGroup>,<lInit> );
+    [; hwg_SetCtrlName( <oDrawn>,<(oDrawn)> )]
+
+#xcommand @ <x>,<y> DRAWN TRACK [ <oTrack> ]    ;
+            [ OF <oWnd> ]                 ;
+            [ SIZE <width>, <height> ]    ;
+            [ COLOR <color> ]             ;
+            [ BACKCOLOR <bcolor> ]        ;
+            [ SLIDER SIZE <nsize> ]       ;
+            [ SLIDER HSTYLE <ostyles> ]   ;
+            [ BAR HSTYLE <ostyleb> ]      ;
+            [<laxis: AXIS>]               ;
+            [ ON PAINT <bDraw> ]          ;
+          => ;
+    [<oTrack> :=] HDrawnTrack():New( <oWnd>,<x>,<y>, ;
+        <width>,<height>,<bDraw>,<color>, <bcolor>, <nsize>, <ostyleb>, <ostyles>, <.laxis.> );
+    [; hwg_SetCtrlName( <oTrack>,<(oTrack)> )]
+
+#xcommand @ <x>,<y> DRAWN EDIT [ <oEdit> CAPTION ] <caption> ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CHANGESTATE <bChg> ]  ;
+            [ FONT <oFont> ]           ;
+            [ PICTURE <cPicture> ]     ;
+          => ;
+    [<oEdit> := ] HDrawnEdit():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <oFont>,<caption>,<cPicture>,<bDraw>,<bChg> );
+    [; hwg_SetCtrlName( <oEdit>,<(oEdit)> )]
+
+#xcommand @ <x>,<y> DRAWN LENTA [ <oLenta> ] ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CLICK <bClick> ]      ;
+            [ FONT <oFont> ]           ;
+            [ ITEMS <aItems> ]         ;
+            [ ITEMSIZE <nItemSize> ]   ;
+            [ HSTYLES <aItemStyle> ]   ;
+          => ;
+    [<oLenta> := ] HDrawnLenta():New( <oWnd>,<x>,<y>,<width>, ;
+        <height>,<oFont>,<bDraw>,<bClick>,<color>,<bcolor>,<aItems>,<nItemSize>,<aItemStyle> );
+    [; hwg_SetCtrlName( <oLenta>,<(oLenta)> )]
+
+#xcommand @ <x>,<y> DRAWN COMBO [ <oDrawn> ITEMS ] <aItems> ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ HSTYLES <aStyles> ]      ;
+            [ INIT  <xValue> ]         ;
+            [ <lText: TEXT> ]          ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CHANGE <bChange> ]    ;
+            [ ON CHANGESTATE <bChg> ]  ;
+            [ FONT <oFont> ]           ;
+            [ DISPLAYCOUNT <nRows>]    ;
+          => ;
+    [<oDrawn> := ] HDrawnCombo():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <aStyles>,<oFont>,<aItems>,<xValue>,<.lText.>,<bDraw>,<bChange>,<bChg>,<nRows> );
+    [; hwg_SetCtrlName( <oDrawn>,<(oDrawn)> )]
+
+#xcommand @ <x>,<y> DRAWN UPDOWN [ <oDrawn> ] ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ INIT <xInit> ]           ;
+            [ ARRAY <arr> ]            ;
+            [ RANGE <nLower>,<nUpper>] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ HSTYLES <aStyles> ]      ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CHANGESTATE <bChg> ]  ;
+            [ FONT <oFont> ]           ;
+          => ;
+    [<oDrawn> := ] HDrawnUpDown():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <aStyles>,<oFont>,<xInit>,<nLower>,<nUpper>,<bDraw>,<bChg>,<arr> );
+    [; hwg_SetCtrlName( <oDrawn>,<(oDrawn)> )]
+
+#xcommand @ <x>,<y> DRAWN BROWSE [ <oDrawn> ] ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CHANGESTATE <bChg> ]  ;
+            [ FONT <oFont> ]           ;
+            [ <lVscroll: VSCROLL> ]    ;
+            [ <lHscroll: HSCROLL> ]    ;
+          => ;
+    [<oDrawn> := ] HDrawnBrw():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <oFont>,<bDraw>,<bChg>,<.lVscroll.>,<.lHscroll.> );
+    [; hwg_SetCtrlName( <oDrawn>,<(oDrawn)> )]
+
+#xcommand @ <x>,<y> DRAWN DATE [ <oDrawn> ] ;
+            [ OF <oWnd> ]              ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ HSTYLES <aStyles> ]      ;
+            [ FONT <oFont> ]           ;
+            [ INIT  <dValue> ]         ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CHANGE <bChange> ]    ;
+            [ ON CHANGESTATE <bChg> ]  ;
+          => ;
+    [<oDrawn> := ] HDrawnDate():New( <oWnd>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <aStyles>,<oFont>,<dValue>,<bDraw>,<bChange>,<bChg> );
+    [; hwg_SetCtrlName( <oDrawn>,<(oDrawn)> )]
 
 /* ================= EOF of guilib.ch ==================== */

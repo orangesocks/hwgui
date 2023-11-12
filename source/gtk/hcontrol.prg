@@ -201,104 +201,7 @@ METHOD End() CLASS HControl
    RETURN Nil
 
 METHOD onAnchor( x, y, w, h ) CLASS HControl
-
-   LOCAL nAnchor, nXincRelative, nYincRelative, nXincAbsolute, nYincAbsolute
-   LOCAL x1, y1, w1, h1, x9, y9, w9, h9
-
-   nAnchor := ::anchor
-   x9 := ::nLeft
-   y9 := ::nTop
-   w9 := ::nWidth
-   h9 := ::nHeight
-
-   x1 := ::nLeft
-   y1 := ::nTop
-   w1 := ::nWidth
-   h1 := ::nHeight
-   //- calculo relativo
-   nXincRelative :=  w / x
-   nYincRelative :=  h / y
-   //- calculo ABSOLUTE
-   nXincAbsolute := ( w - x )
-   nYincAbsolute := ( h - y )
-
-   IF nAnchor >= ANCHOR_VERTFIX
-      //- vertical fixed center
-      nAnchor := nAnchor - ANCHOR_VERTFIX
-      y1 := y9 + Int( ( h - y ) * ( ( y9 + h9 / 2 ) / y ) )
-   ENDIF
-   IF nAnchor >= ANCHOR_HORFIX
-      //- horizontal fixed center
-      nAnchor := nAnchor - ANCHOR_HORFIX
-      x1 := x9 + Int( ( w - x ) * ( ( x9 + w9 / 2 ) / x ) )
-   ENDIF
-   IF nAnchor >= ANCHOR_RIGHTREL
-      // relative - RIGHT RELATIVE
-      nAnchor := nAnchor - ANCHOR_RIGHTREL
-      x1 := w - Int( ( x - x9 - w9 ) * nXincRelative ) - w9
-   ENDIF
-   IF nAnchor >= ANCHOR_BOTTOMREL
-      // relative - BOTTOM RELATIVE
-      nAnchor := nAnchor - ANCHOR_BOTTOMREL
-      y1 := h - Int( ( y - y9 - h9 ) * nYincRelative ) - h9
-   ENDIF
-   IF nAnchor >= ANCHOR_LEFTREL
-      // relative - LEFT RELATIVE
-      nAnchor := nAnchor - ANCHOR_LEFTREL
-      IF x1 != x9
-         w1 := x1 - ( Int( x9 * nXincRelative ) ) + w9
-      ENDIF
-      x1 := Int( x9 * nXincRelative )
-   ENDIF
-   IF nAnchor >= ANCHOR_TOPREL
-      // relative  - TOP RELATIVE
-      nAnchor := nAnchor - ANCHOR_TOPREL
-      IF y1 != y9
-         h1 := y1 - ( Int( y9 * nYincRelative ) ) + h9
-      ENDIF
-      y1 := Int( y9 * nYincRelative )
-   ENDIF
-   IF nAnchor >= ANCHOR_RIGHTABS
-      // Absolute - RIGHT ABSOLUTE
-      nAnchor := nAnchor - ANCHOR_RIGHTABS
-      IF x1 != x9
-         w1 := x1 - ( x9 +  Int( nXincAbsolute ) ) + w9
-      ENDIF
-      x1 := x9 +  Int( nXincAbsolute )
-   ENDIF
-   IF nAnchor >= ANCHOR_BOTTOMABS
-      // Absolute - BOTTOM ABSOLUTE
-      nAnchor := nAnchor - ANCHOR_BOTTOMABS
-      IF y1 != y9
-         h1 := y1 - ( y9 +  Int( nYincAbsolute ) ) + h9
-      ENDIF
-      y1 := y9 +  Int( nYincAbsolute )
-   ENDIF
-   IF nAnchor >= ANCHOR_LEFTABS
-      // Absolute - LEFT ABSOLUTE
-      nAnchor := nAnchor - ANCHOR_LEFTABS
-      IF x1 != x9
-         w1 := x1 - x9 + w9
-      ENDIF
-      x1 := x9
-   ENDIF
-   IF nAnchor >= ANCHOR_TOPABS
-      // Absolute - TOP ABSOLUTE
-      //nAnchor := nAnchor - 1
-      IF y1 != y9
-         h1 := y1 - y9 + h9
-      ENDIF
-      y1 := y9
-   ENDIF
-   hwg_Invalidaterect( ::oParent:handle, 1, ::nLeft, ::nTop, ::nWidth, ::nHeight )
-   ::Move( x1, y1, w1, h1 )
-   ::nLeft := x1
-   ::nTop := y1
-   ::nWidth := w1
-   ::nHeight := h1
-   hwg_Redrawwindow( ::handle, RDW_ERASE + RDW_INVALIDATE )
-
-   RETURN Nil
+   RETURN hwg_resize_onAnchor( Self, x, y, w, h )
 
    //- HStatus
 
@@ -461,7 +364,7 @@ METHOD SetText( c ) CLASS HButton
 
    hwg_button_SetText( ::handle, ::title := c )
 
- RETURN NIL
+   RETURN NIL
 
 
 CLASS HButtonEX INHERIT HButton
@@ -584,5 +487,218 @@ METHOD Activate() CLASS HLine
          ::nWidth, ::nHeight )
       ::Init()
    ENDIF
+
+   RETURN Nil
+
+#define  STATE_NORMAL    0
+#define  STATE_PRESSED   1
+#define  STATE_MOVER     2
+#define  STATE_UNPRESS   3
+
+CLASS HBoard INHERIT HControl
+
+   DATA winclass    INIT "HBOARD"
+   DATA lMouseOver  INIT .F.
+   DATA oInFocus
+   DATA aDrawn      INIT {}
+   DATA aSize
+
+   METHOD New( oWndParent, nId, nLeft, nTop, nWidth, nHeight, ;
+      oFont, bInit, bSize, bPaint, cTooltip, tcolor, bColor )
+
+   METHOD Activate()
+   METHOD onEvent( msg, wParam, lParam )
+   METHOD Init()
+   METHOD Paint( hDC )
+   METHOD End()
+
+ENDCLASS
+
+METHOD New( oWndParent, nId, nLeft, nTop, nWidth, nHeight, ;
+      oFont, bInit, bSize, bPaint, cTooltip, tcolor, bColor ) CLASS HBoard
+
+   ::Super:New( oWndParent, nId, SS_OWNERDRAW, nLeft, nTop, nWidth, nHeight, oFont, bInit, ;
+      bSize, bPaint, cTooltip, tcolor, bColor )
+   ::aSize := { ::nWidth, ::nHeight }
+
+   IF ::bColor == Nil
+      ::bColor := ::oParent:bColor
+   ENDIF
+
+   HDrawn():oDefParent := Self
+
+   ::Activate()
+
+   RETURN Self
+
+METHOD Activate() CLASS HBoard
+
+   IF !Empty( ::oParent:handle )
+      ::handle := hwg_CreateBoard( ::oParent:handle,,, ::nLeft, ::nTop, ::nWidth, ::nHeight )
+      ::Init()
+   ENDIF
+
+   RETURN Nil
+
+METHOD onEvent( msg, wParam, lParam )  CLASS HBoard
+
+   LOCAL nRes, o, o1, nPosX, nPosY
+
+   IF ::bOther != Nil
+      IF ( nRes := Eval( ::bOther, Self, msg, wParam, lParam ) ) == 0
+         RETURN -1
+      ELSEIF nRes == 1
+         RETURN 1
+      ENDIF
+   ENDIF
+
+   IF msg == WM_MOUSEMOVE
+      IF !::lMouseOver
+         ::lMouseOver := .T.
+      ENDIF
+      IF ( o := HDrawn():GetByPos( nPosX := hwg_Loword( lParam ), ;
+         nPosY := hwg_Hiword( lParam ), Self ) ) != Nil
+         o:SetState( STATE_MOVER, nPosX, nPosY )
+         o:onMouseMove( nPosX, nPosY )
+      ELSE
+         HDrawn():GetByState( STATE_MOVER, ::aDrawn, {|o|o:SetState(STATE_NORMAL,nPosX,nPosY)}, .T. )
+      ENDIF
+
+   ELSEIF msg == WM_PAINT
+      ::Paint()
+
+   ELSEIF msg == WM_MOUSELEAVE
+      ::lMouseOver := .F.
+      nPosX := hwg_Loword( lParam )
+      nPosY := hwg_Hiword( lParam )
+      HDrawn():GetByState( STATE_PRESSED, ::aDrawn, {|o|o:SetState(STATE_NORMAL,nPosX,nPosY)}, .T. )
+      HDrawn():GetByState( STATE_MOVER, ::aDrawn, {|o|o:SetState(STATE_NORMAL,nPosX,nPosY)}, .T. )
+
+   ELSEIF msg == WM_LBUTTONDOWN
+      IF ( o := HDrawn():GetByPos( nPosX := hwg_Loword( lParam ), ;
+         nPosY := hwg_Hiword( lParam ), Self ) ) != Nil .AND. !o:lHide
+         IF !Empty( ::oInFocus ) .AND. !( o == ::oInFocus )
+            ::oInFocus:onKillFocus()
+            ::oInFocus := Nil
+         ENDIF
+         o:SetState( STATE_PRESSED, nPosX, nPosY )
+         o:onButtonDown( msg, nPosX, nPosY )
+      ELSEIF !Empty( ::oInFocus )
+         ::oInFocus:onKillFocus()
+         ::oInFocus := Nil
+      ENDIF
+
+   ELSEIF msg == WM_RBUTTONDOWN
+      IF ( o := HDrawn():GetByPos( nPosX := hwg_Loword( lParam ), ;
+         nPosY := hwg_Hiword( lParam ), Self ) ) != Nil .AND. !o:lHide
+         IF !Empty( ::oInFocus ) .AND. !( o == ::oInFocus )
+            ::oInFocus:onKillFocus()
+            ::oInFocus := Nil
+         ENDIF
+         o:onButtonDown( msg, nPosX, nPosY )
+      ELSEIF !Empty( ::oInFocus )
+         ::oInFocus:onKillFocus()
+         ::oInFocus := Nil
+      ENDIF
+
+   ELSEIF msg == WM_LBUTTONDBLCLK
+      IF ( o := HDrawn():GetByPos( nPosX := hwg_Loword( lParam ), ;
+         nPosY := hwg_Hiword( lParam ), Self ) ) != Nil .AND. !o:lHide
+         o:onButtonDbl( nPosX, nPosY )
+      ENDIF
+
+   ELSEIF msg == WM_LBUTTONUP
+      IF !Empty( o := HDrawn():GetByState( STATE_PRESSED, ::aDrawn ) ) .AND. !o:lHide
+         o:SetState( 3, nPosX := hwg_Loword( lParam ), nPosY := hwg_Hiword( lParam ) )
+         o:onButtonUp( nPosX, nPosY )
+      ENDIF
+
+   ELSEIF msg == WM_GETDLGCODE
+      RETURN DLGC_WANTALLKEYS
+
+   ELSEIF msg == WM_KEYDOWN .OR. msg == WM_CHAR
+      IF !Empty( ::oInFocus ) .AND. !::oInFocus:lHide
+         ::oInFocus:onKey( msg, wParam, lParam )
+      ENDIF
+
+   ELSEIF msg == WM_KILLFOCUS
+      IF !Empty( ::oInFocus )
+         ::oInFocus:onKillFocus()
+         ::oInFocus := Nil
+      ENDIF
+
+   ELSEIF msg == WM_SIZE
+
+      FOR EACH o IN ::aDrawn
+         IF o:bSize != NIL
+            Eval( o:bSize, o, hwg_Loword( lParam ), hwg_Hiword( lParam ) )
+         ELSEIF o:Anchor != 0
+            hwg_resize_onAnchor( o, ::aSize[1], ::aSize[2], hwg_Loword( lParam ), hwg_Hiword( lParam ) )
+         ENDIF
+         FOR EACH o1 IN o:aDrawn
+            IF o1:bSize != NIL
+               Eval( o1:bSize, o1, hwg_Loword( lParam ), hwg_Hiword( lParam ) )
+            ELSEIF o1:Anchor != 0
+               hwg_resize_onAnchor( o1, ::aSize[1], ::aSize[2], hwg_Loword( lParam ), hwg_Hiword( lParam ) )
+            ENDIF
+         NEXT
+      NEXT
+      ::aSize[1] := ::nWidth
+      ::aSize[2] := ::nHeight
+      ::Refresh()
+
+   ELSE
+      RETURN ::Super:onEvent( msg, wParam, lParam )
+
+   ENDIF
+
+   RETURN -1
+
+METHOD Init() CLASS HBoard
+
+   IF ! ::lInit
+      ::Super:Init()
+      hwg_Setwindowobject( ::handle, Self )
+   ENDIF
+
+   RETURN Nil
+
+METHOD Paint( hDC ) CLASS HBoard
+
+   LOCAL i
+   LOCAL pps, l := .F.
+
+   IF hDC == Nil
+      pps := hwg_Definepaintstru()
+      hDC := hwg_Beginpaint( ::handle, pps )
+      l := .T.
+   ENDIF
+
+   IF !Empty( ::bPaint )
+      IF Eval( ::bPaint, Self, hDC ) == 0
+         RETURN Nil
+      ENDIF
+   ELSEIF l .AND. !Empty( ::brush )
+      hwg_Fillrect( hDC, 0, 0, ::nWidth, ::nHeight, ::brush:handle )
+   ENDIF
+
+   FOR i := 1 TO Len( ::aDrawn )
+      ::aDrawn[i]:Paint( hDC )
+   NEXT
+
+   IF l
+      hwg_Endpaint( ::handle, pps )
+   ENDIF
+
+   RETURN Nil
+
+METHOD End() CLASS HBoard
+
+   LOCAL i
+
+   ::Super:End()
+   FOR i := 1 TO Len( ::aDrawn )
+      ::aDrawn[i]:End()
+   NEXT
 
    RETURN Nil

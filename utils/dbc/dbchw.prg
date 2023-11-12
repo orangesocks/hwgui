@@ -153,8 +153,8 @@ FUNCTION Main( ... )
       cServerPath += "\"
    ENDIF
    hb_cdpSelect( cAppCpage )
-#ifdef __GTK__
    hwg_SetResContainer(  cExePath + "dbchw.bin" )
+#ifdef __GTK__
    PREPARE FONT oMainFont NAME "MS Sans Serif" WIDTH 0 HEIGHT - 12
 #else
    PREPARE FONT oMainFont NAME "MS Sans Serif" WIDTH 0 HEIGHT - 13
@@ -809,7 +809,8 @@ FUNCTION OpenDbf( fname, alsname, hChild, pass )
       oBrowse:aColumns := {}
       oBrowse:AddColumn( { "",, "C", 2, 0 } )
       oBrowse:aColumns[1]:cargo := oBrowse
-      oBrowse:aColumns[1]:setPaintCB( PAINT_LINE_ALL, bCol1 )
+      oBrowse:aColumns[1]:oPaintCB := HPaintCB():New()
+      oBrowse:aColumns[1]:oPaintCB:Set( PAINT_LINE_ALL, bCol1 )
       FOR i := 1 TO kolf
          oBrowse:AddColumn( { FieldName( i ),        ;
             FieldWBlock( FieldName( i ), nArea ), ;

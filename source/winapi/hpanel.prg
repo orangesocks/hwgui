@@ -17,7 +17,7 @@ CLASS HPanel INHERIT HControl
    DATA oEmbedded
    DATA bScroll
    DATA oStyle
-   DATA aPaintCB    INIT {}         // Array of items to draw: { cIt, bDraw(hDC,aCoors) }
+   DATA oPaintCB    INIT {}         // HPaintCB object
    DATA lDragWin    INIT .F.
    DATA lCaptured   INIT .F.
    DATA hCursor
@@ -35,7 +35,7 @@ CLASS HPanel INHERIT HControl
    METHOD BackColor( bcolor ) INLINE ::Setcolor( , bcolor, .T. )
    METHOD Hide()
    METHOD Show()
-   METHOD SetPaintCB( nId, block, cId )
+   //METHOD SetPaintCB( nId, block, cId )
    METHOD Drag( xPos, yPos )
    METHOD Release()
 
@@ -178,7 +178,8 @@ METHOD DrawItems( hDC, aCoors ) CLASS HPanel
    IF Empty( aCoors )
       aCoors := hwg_Getclientrect( ::handle )
    ENDIF
-   IF !Empty( aCB := hwg_getPaintCB( ::aPaintCB, PAINT_ITEM ) )
+   //IF !Empty( aCB := hwg_getPaintCB( ::aPaintCB, PAINT_ITEM ) )
+   IF !Empty( ::oPaintCB ) .AND. !Empty( aCB := ::oPaintCB:Get( PAINT_ITEM ) )
       FOR i := 1 TO Len( aCB )
          Eval( aCB[i], Self, hDC, aCoors[1], aCoors[2], aCoors[3], aCoors[4] )
       NEXT
@@ -198,7 +199,8 @@ METHOD Paint() CLASS HPanel
    hDC    := hwg_Beginpaint( ::handle, pps )
    aCoors := hwg_Getclientrect( ::handle )
 
-   IF !Empty( block := hwg_getPaintCB( ::aPaintCB, PAINT_BACK ) )
+   //IF !Empty( block := hwg_getPaintCB( ::aPaintCB, PAINT_BACK ) )
+   IF !Empty( ::oPaintCB ) .AND. !Empty( block := ::oPaintCB:Get( PAINT_ITEM ) )
       Eval( block, Self, hDC, aCoors[1], aCoors[2], aCoors[3], aCoors[4] )
    ELSEIF ::oStyle == Nil
       oPenLight := HPen():Add( BS_SOLID, 1, hwg_Getsyscolor( COLOR_3DHILIGHT ) )
@@ -295,7 +297,7 @@ METHOD Show() CLASS HPanel
    hwg_Movewindow( ::Handle, ::nLeft, ::nTop, ::nWidth, ::nHeight )
 
    RETURN Nil
-
+/*
 METHOD SetPaintCB( nId, block, cId ) CLASS HPanel
 
    LOCAL i, nLen
@@ -323,7 +325,7 @@ METHOD SetPaintCB( nId, block, cId ) CLASS HPanel
    ENDIF
 
    RETURN Nil
-
+*/
 METHOD Drag( xPos, yPos ) CLASS HPanel
 
    LOCAL oWnd := hwg_getParentForm( Self )
@@ -428,7 +430,8 @@ METHOD Paint() CLASS HPanelStS
    pps := hwg_Definepaintstru()
    hDC := hwg_Beginpaint( ::handle, pps )
 
-   IF !Empty( block := hwg_getPaintCB( ::aPaintCB, PAINT_BACK ) )
+   //IF !Empty( block := hwg_getPaintCB( ::aPaintCB, PAINT_BACK ) )
+   IF !Empty( ::oPaintCB ) .AND. !Empty( block := ::oPaintCB:Get( PAINT_BACK ) )
       aCoors := hwg_Getclientrect( ::handle )
       Eval( block, Self, hDC, aCoors[1], aCoors[2], aCoors[3], aCoors[4] )
    ELSEIF Empty( ::oStyle )
@@ -450,7 +453,7 @@ CLASS HPanelHea INHERIT HPANEL
 
    METHOD New( oWndParent, nId, nHeight, oFont, bInit, bPaint, tcolor, bcolor, oStyle, ;
       cText, xt, yt, lBtnClose, lBtnMax, lBtnMin )
-   METHOD SetText( c , lrefresh )  && INLINE (::title := c)
+   METHOD SetText( c )
    METHOD SetSysbtnColor( tColor, bColor )
    METHOD PaintText( hDC )
    METHOD Paint()
@@ -507,30 +510,10 @@ METHOD New( oWndParent, nId, nHeight, oFont, bInit, bPaint, tcolor, bcolor, oSty
 
    RETURN Self
 
-METHOD SetText( c , lrefresh) CLASS HPanelHea
-   * DF7BE: Set lrefresh to .T. for refreshing the header text
-   * (compatibility to INLINE definition)
-
-   LOCAL pps, hDC
-
-   IF lrefresh == NIL
-      lrefresh := .F.
-   ENDIF
+METHOD SetText( c ) CLASS HPanelHea
 
    ::title := c
-
-   IF lrefresh
-      pps := hwg_Definepaintstru()
-      hDC := hwg_Beginpaint( ::handle, pps )
-
-      ::PaintText( hDC )
-
-      hwg_Endpaint( ::handle, pps )
-
-      // hwg_Sendmessage( ::oParent:handle, WM_SIZE , 0, 0 )  && Does not refresh
-      hwg_Redrawwindow( ::handle, RDW_ERASE + RDW_INVALIDATE + RDW_INTERNALPAINT + RDW_UPDATENOW )
-
-   ENDIF
+   hwg_Redrawwindow( ::handle, RDW_ERASE + RDW_INVALIDATE + RDW_INTERNALPAINT + RDW_UPDATENOW )
 
    RETURN NIL
 
@@ -587,7 +570,8 @@ METHOD Paint() CLASS HPanelHea
    pps := hwg_Definepaintstru()
    hDC := hwg_Beginpaint( ::handle, pps )
 
-   IF !Empty( block := hwg_getPaintCB( ::aPaintCB, PAINT_BACK ) )
+   //IF !Empty( block := hwg_getPaintCB( ::aPaintCB, PAINT_BACK ) )
+   IF !Empty( ::oPaintCB ) .AND. !Empty( block := ::oPaintCB:Get( PAINT_BACK ) )
       aCoors := hwg_Getclientrect( ::handle )
       Eval( block, Self, hDC, aCoors[1], aCoors[2], aCoors[3], aCoors[4] )
    ELSEIF Empty( ::oStyle )

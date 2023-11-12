@@ -59,6 +59,7 @@ PROCMISC_LIB_OBJS = \
    $(OBJ_DIR)\procscri.obj \
    $(OBJ_DIR)\scrdebug.obj \
    $(OBJ_DIR)\hcedit.obj \
+   $(OBJ_DIR)\hceditb.obj \
    $(OBJ_DIR)\hcedit_w.obj \
    $(OBJ_DIR)\hilight.obj \
    $(OBJ_DIR)\cfuncs.obj
@@ -95,6 +96,7 @@ HWGUI_LIB_OBJS = \
    $(OBJ_DIR)\hcontrol.obj \
    $(OBJ_DIR)\hcwindow.obj \
    $(OBJ_DIR)\hdatepic.obj \
+   $(OBJ_DIR)\hdrawn.obj \
    $(OBJ_DIR)\hdialog.obj \
    $(OBJ_DIR)\hedit.obj \
    $(OBJ_DIR)\hfreeimg.obj \
@@ -229,6 +231,12 @@ $(OBJ_DIR)\hdatepic.c : $(SRC_DIR)\hdatepic.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
 $(OBJ_DIR)\hdatepic.obj : $(OBJ_DIR)\hdatepic.c
+   $(CC_EXE) $(CFLAGS) /Fo$@ $**
+
+$(OBJ_DIR)\hdrawn.c : $(SRC_DIR)\hdrawn.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
+$(OBJ_DIR)\hdrawn.obj : $(OBJ_DIR)\hdrawn.c
    $(CC_EXE) $(CFLAGS) /Fo$@ $**
 
 $(OBJ_DIR)\hdialog.c : $(SRC_DIR)\hdialog.prg
@@ -568,7 +576,13 @@ $(OBJ_DIR)\hcedit_w.obj : $(EDITOR_DIR)\hcedit_w.c
 $(OBJ_DIR)\hcedit.c : $(EDITOR_DIR)\hcedit.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
+$(OBJ_DIR)\hceditb.c : $(EDITOR_DIR)\hceditb.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
 $(OBJ_DIR)\hcedit.obj : $(OBJ_DIR)\hcedit.c
+   $(CC_EXE) $(CFLAGS) /Fo$@ $**
+
+$(OBJ_DIR)\hceditb.obj : $(OBJ_DIR)\hceditb.c
    $(CC_EXE) $(CFLAGS) /Fo$@ $**
 
 $(OBJ_DIR)\hilight.c : $(EDITOR_DIR)\hilight.prg

@@ -20,6 +20,7 @@ PROCMISC_DIR=../common/procmisc
 XML_DIR=../common/xml
 DEBUG_DIR=../common/debug
 EDITOR_DIR=../common/editor
+CROSS_DIR=../cross
 SRC_DIR=./
 
 CFLAGS = -Wall -Wunused -Wno-deprecated-declarations -O3 -DHWG_USE_POINTER_ITEM 
@@ -28,7 +29,7 @@ HB_FLAGS = -d__LINUX__ -w3 -es2
 vpath %.a $(LIB_DIR)
 vpath %.o $(OBJ_DIR)
 vpath %.c $(OBJ_DIR):$(PROCMISC_DIR):$(XML_DIR):$(DEBUG_DIR):$(EDITOR_DIR):$(SRC_DIR)
-vpath %.prg $(PROCMISC_DIR):$(XML_DIR):$(DEBUG_DIR):$(EDITOR_DIR):$(SRC_DIR)
+vpath %.prg $(PROCMISC_DIR):$(XML_DIR):$(DEBUG_DIR):$(EDITOR_DIR):$(SRC_DIR):$(CROSS_DIR)
 
 $(OBJ_DIR)/%.c : %.prg
 	$(HRB_BIN)/harbour -n -q -w -es2 $(HB_FLAGS) -I$(HRB_INC) -I$(INC_DIR) -o$@ $<
@@ -60,6 +61,7 @@ $(LIB_DIR)/libhwgui.a : \
    $(OBJ_DIR)/message.o \
    $(OBJ_DIR)/misc.o \
    $(OBJ_DIR)/hmisc.o \
+   $(OBJ_DIR)/common.o \
    $(OBJ_DIR)/drawwidg.o \
    $(OBJ_DIR)/herrsys.o \
    $(OBJ_DIR)/gtkmain.o \
@@ -69,6 +71,9 @@ $(LIB_DIR)/libhwgui.a : \
    $(OBJ_DIR)/hcheck.o \
    $(OBJ_DIR)/hcombo.o \
    $(OBJ_DIR)/hcontrol.o \
+   $(OBJ_DIR)/hdrawn.o \
+   $(OBJ_DIR)/hdrawnbrw.o \
+   $(OBJ_DIR)/hdrawncomb.o \
    $(OBJ_DIR)/hdialog.o \
    $(OBJ_DIR)/hedit.o \
    $(OBJ_DIR)/hfrmtmpl.o \
@@ -90,7 +95,7 @@ $(LIB_DIR)/libhwgui.a : \
    $(OBJ_DIR)/hwinprn.o \
    $(OBJ_DIR)/hprogres.o \
    $(OBJ_DIR)/hmonthc.o \
-   $(OBJ_DIR)/htrackbr.o \
+   $(OBJ_DIR)/htrack.o \
    $(OBJ_DIR)/initools.o \
    $(OBJ_DIR)/menu.o \
    $(OBJ_DIR)/inter.o    
@@ -104,6 +109,7 @@ $(LIB_DIR)/libprocmisc.a : \
    $(OBJ_DIR)/procscri.o \
    $(OBJ_DIR)/scrdebug.o \
    $(OBJ_DIR)/hcedit.o \
+   $(OBJ_DIR)/hceditb.o \
    $(OBJ_DIR)/hcedit_l.o \
    $(OBJ_DIR)/hilight.o \
    $(OBJ_DIR)/cfuncs.o

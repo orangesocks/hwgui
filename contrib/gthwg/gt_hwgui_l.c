@@ -107,6 +107,7 @@ typedef struct
    int      CaretRow, CaretCol;
 
    POINT    MousePos;       /* the last mouse position */
+   POINT    ExactMousePos;  /* the last mouse position in pixels*/
 
    int      CodePage;       /* Code page to use for display characters */
 
@@ -126,13 +127,41 @@ static int iNewPosX = -1, iNewPosY = -1;
 static HB_MAXUINT iCaretMs = 0;
 static int bCaretShow = 0;
 
+static HWGUI_HDC hDC;
+
 static int s_GtId;
 static HB_GT_FUNCS SuperTable;
 
 #define HB_GTSUPER   ( &SuperTable )
 #define HB_GTID_PTR  ( &s_GtId )
 
-//static HB_LONG prevp2 = -1;
+static PHB_DYNS s_pSymTest_paint = NULL;
+
+static int gthwg_PaintCB( PHWGUI_HDC hdc )
+{
+
+   if( hb_dynsymIsFunction( s_pSymTest_paint ) )
+   {
+      hb_vmPushDynSym( s_pSymTest_paint );
+      hb_vmPushNil();   /* places NIL at self */
+      hb_vmPushPointer( ( void * ) hdc );
+      hb_vmDo( 1 );
+      return hb_parni( -1 );
+   }
+   return -1;
+}
+
+HB_FUNC( GTHWG_PAINT_SETCALLBACK )
+{
+   if( hb_pcount() > 0 && HB_ISCHAR(1) )
+   {
+      s_pSymTest_paint = hb_dynsymGetCase( hb_parc(1) );
+   }
+   else
+   {
+      s_pSymTest_paint = NULL;
+   }
+}
 
 static void gthwg_GetWindowRect( GtkWidget* hWnd, LPRECT lpRect )
 {
@@ -584,6 +613,19 @@ static void gthwg_PaintText( PHB_GTHWG pHWG, GdkRectangle *pArea )
       }
    }
 
+   if( s_pSymTest_paint )
+   {
+      //hDC = (PHWGUI_HDC) hb_xgrab( sizeof(HWGUI_HDC) );
+      memset( &hDC, 0, sizeof(HWGUI_HDC) );
+      hDC.widget = hPaneMain;
+      hDC.window = gtk_widget_get_window( hPaneMain );
+      hDC.cr = cr;
+      hDC.layout = layout;
+      hDC.fcolor = hDC.bcolor = -1;
+      gthwg_PaintCB( &hDC );
+      //hb_xfree( hDC );
+   }
+
    if( layout )
       g_object_unref( (GObject*) layout );
    cairo_destroy( cr );
@@ -819,8 +861,8 @@ static gint cb_event( GtkWidget *widget, GdkEvent * event, gchar* data )
       else
          p1 = (event->type==GDK_BUTTON_PRESS)? WM_LBUTTONDOWN :
               ( (event->type==GDK_BUTTON_RELEASE)? WM_LBUTTONUP : WM_LBUTTONDBLCLK );
-      //p2 = 0;
-      //p3 = ( ((HB_ULONG)(((GdkEventButton*)event)->x)) & 0xFFFF ) | ( ( ((HB_ULONG)(((GdkEventButton*)event)->y)) << 16 ) & 0xFFFF0000 );
+      pHWGMain->ExactMousePos.y = (int)(((GdkEventButton*)event)->y);
+      pHWGMain->ExactMousePos.x = (int)(((GdkEventButton*)event)->x);
       gthwg_MouseEvent( (int)p1, (int)(((GdkEventButton*)event)->x), (int)(((GdkEventButton*)event)->y) );
    }
    else if( event->type == GDK_MOTION_NOTIFY )
@@ -828,6 +870,8 @@ static gint cb_event( GtkWidget *widget, GdkEvent * event, gchar* data )
       p1 = WM_MOUSEMOVE;
       p2 = ( ((GdkEventMotion*)event)->state & GDK_BUTTON1_MASK )? 1:0;
       p3 = ( ((HB_ULONG)(((GdkEventMotion*)event)->x)) & 0xFFFF ) | ( ( ((HB_ULONG)(((GdkEventMotion*)event)->y)) << 16 ) & 0xFFFF0000 );
+      pHWGMain->ExactMousePos.y = (int)(((GdkEventButton*)event)->y);
+      pHWGMain->ExactMousePos.x = (int)(((GdkEventButton*)event)->x);
    }
    else if( event->type == GDK_CONFIGURE )
    {
@@ -1512,6 +1556,14 @@ static HB_BOOL hb_gt_hwg_Info( PHB_GT pGT, int iType, PHB_GT_INFO pInfo )
          }
          break;
       }
+
+      case HB_GTI_MOUSEPOS_XY:
+         if( ! pInfo->pResult )
+            pInfo->pResult = hb_itemNew( NULL );
+         hb_arrayNew( pInfo->pResult, 2 );
+         hb_arraySetNI( pInfo->pResult, 1, pHWG->ExactMousePos.x );
+         hb_arraySetNI( pInfo->pResult, 2, pHWG->ExactMousePos.y );
+         break;
 
       case HB_GTI_WINHANDLE:
          pInfo->pResult = hb_itemPutPtr( pInfo->pResult, hWndMain );

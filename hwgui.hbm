@@ -33,11 +33,20 @@
 
 {win}source/winapi/herrsys.prg
 
+{win}source/cross/common.prg
+{win}source/cross/hbincnt.prg
+{win}source/cross/hdrawn.prg
+{win}source/cross/hdrawnbrw.prg
+{win}source/cross/hdrawncomb.prg
+{win}source/cross/hfrmtmpl.prg
+{win}source/cross/hgraph.prg
+{win}source/cross/hlenta.prg
+{win}source/cross/htrack.prg
+
 {win}source/winapi/hipedit.prg
 {win}source/winapi/drawwidg.prg
 {win}source/winapi/guimain.prg
 {win}source/winapi/barcode.prg
-{win}source/winapi/hbincnt.prg
 {win}source/winapi/hbrowse.prg
 {win}source/winapi/hbrwflt.prg
 {win}source/winapi/hcheck.prg
@@ -48,8 +57,6 @@
 {win}source/winapi/hdialog.prg
 {win}source/winapi/hedit.prg
 {win}source/winapi/hfreeimg.prg
-{win}source/winapi/hfrmtmpl.prg
-{win}source/winapi/hgraph.prg
 {win}source/winapi/hgrid.prg
 {win}source/winapi/hlistbox.prg
 {win}source/winapi/htool.prg
@@ -80,7 +87,6 @@
 {win}source/winapi/printdos.prg
 {win}source/winapi/hdc.prg
 {win}source/winapi/hhyper.prg
-{win}source/winapi/hlenta.prg
 {win}source/winapi/hmisc.prg
 {win}source/winapi/halert.prg
 
@@ -96,10 +102,19 @@
 {unix}source/gtk/misc.c
 {unix}source/gtk/inter.c
 
+{unix}source/cross/common.prg
+{unix}source/cross/hbincnt.prg
+{unix}source/cross/hdrawn.prg
+{unix}source/cross/hdrawnbrw.prg
+{unix}source/cross/hdrawncomb.prg
+{unix}source/cross/hfrmtmpl.prg
+{unix}source/cross/hgraph.prg
+{unix}source/cross/hlenta.prg
+{unix}source/cross/htrack.prg
+
 {unix}source/gtk/drawwidg.prg
 {unix}source/gtk/herrsys.prg
 {unix}source/gtk/gtkmain.prg
-{unix}source/gtk/hbincnt.prg
 {unix}source/gtk/hbrowse.prg
 {unix}source/gtk/hcwindow.prg
 {unix}source/gtk/hcheck.prg
@@ -107,10 +122,7 @@
 {unix}source/gtk/hcontrol.prg
 {unix}source/gtk/hdialog.prg
 {unix}source/gtk/hedit.prg
-{unix}source/gtk/hfrmtmpl.prg
-{unix}source/gtk/hgraph.prg
 {unix}source/gtk/hhyper.prg
-{unix}source/gtk/hlenta.prg
 {unix}source/gtk/hownbtn.prg
 {unix}source/gtk/hpanel.prg
 {unix}source/gtk/hprinter.prg
@@ -126,7 +138,6 @@
 {unix}source/gtk/hwinprn.prg
 {unix}source/gtk/hprogres.prg
 {unix}source/gtk/hmonthc.prg
-{unix}source/gtk/htrackbr.prg
 {unix}source/gtk/hmisc.prg
 {unix}source/gtk/initools.prg
 {unix}source/gtk/menu.prg

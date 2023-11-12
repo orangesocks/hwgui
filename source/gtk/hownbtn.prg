@@ -98,7 +98,6 @@ METHOD New( oWndParent, nId, aStyles, nLeft, nTop, nWidth, nHeight,   ;
       ENDIF
       IF ::oBitmap != Nil .AND. lTr != Nil .AND. lTr
          ::lTransp := .T.
-         //hwg_alpha2pixbuf( ::oBitmap:handle, ::trColor )
       ENDIF
    ENDIF
    ::xb      := xb
@@ -153,6 +152,20 @@ METHOD onEvent( msg, wParam, lParam )  CLASS HOwnButton
       hwg_Setfocus( h )
    ELSEIF msg == WM_MOUSEMOVE
       ::MouseMove( wParam, lParam )
+
+   ELSEIF msg == WM_MOUSELEAVE
+      IF ::state != OBTN_INIT
+         IF !Empty( ::oTimer )
+            OwnBtnTimerProc( Self, 2 )
+            ::oTimer:End()
+            ::oTimer := Nil
+         ENDIF
+         IF !::lPress
+            ::state := OBTN_NORMAL
+            hwg_Redrawwindow( ::handle )
+         ENDIF
+     ENDIF
+
    ELSEIF msg == WM_DESTROY
       ::End()
    ENDIF
@@ -217,12 +230,6 @@ METHOD Paint() CLASS HOwnButton
       ELSE
          nwidthb := ::widthb
       ENDIF
-      // hwg_MsgIsNIL(aCoors[1],"aCoors[1]")
-      // hwg_MsgIsNIL(aCoors[3],"aCoors[3]")
-      // hwg_MsgIsNIL(::widthb,"::widthb")    && passed NIL
-
-      // hwg_WriteLog("aCoors[3]=" + STR(aCoors[3]) + CHR(10) + "aCoors[1]=" + STR(aCoors[1]) )
-      // hwg_WriteLog("::widthb=" + STR(::widthb) )
 
       x1 := Iif( ::xb != Nil .AND. ::xb != 0, ::xb, ;
          Round( ( aCoors[3] - aCoors[1] - nwidthb ) / 2, 0 ) )
@@ -269,24 +276,10 @@ METHOD Paint() CLASS HOwnButton
 METHOD MouseMove( wParam, lParam )  CLASS HOwnButton
 
    LOCAL lEnter := ( hwg_BitAnd( wParam,16 ) > 0 )
-   * Variables not used
-   * LOCAL res := .F.
 
-   * Parameters not used
    HB_SYMBOL_UNUSED(lParam)
 
    IF ::state != OBTN_INIT
-      IF !lEnter
-         IF !Empty( ::oTimer )
-            OwnBtnTimerProc( Self, 2 )
-            ::oTimer:End()
-            ::oTimer := Nil
-         ENDIF
-         IF !::lPress
-            ::state := OBTN_NORMAL
-            hwg_Redrawwindow( ::handle )
-         ENDIF
-      ENDIF
       IF lEnter .AND. ::state == OBTN_NORMAL
          ::state := OBTN_MOUSOVER
          hwg_Redrawwindow( ::handle )

@@ -10,6 +10,7 @@ INCLUDE_DIR = include;$(HRB_DIR)\include
 OBJ_DIR = obj
 LIB_DIR = lib
 SRC_DIR = source\winapi
+CROSS_DIR = source\cross
 PROCMISC_DIR = source\common\procmisc
 EDITOR_DIR = source\common\editor
 XML_DIR = source\common\xml
@@ -55,6 +56,7 @@ PROCMISC_LIB_OBJS = \
    $(OBJ_DIR)\procscri.obj\
    $(OBJ_DIR)\scrdebug.obj\
    $(OBJ_DIR)\hcedit.obj\
+   $(OBJ_DIR)\hceditb.obj\
    $(OBJ_DIR)\hcedit_w.obj\
    $(OBJ_DIR)\hilight.obj \
    $(OBJ_DIR)\cfuncs.obj
@@ -79,6 +81,7 @@ HWGUI_LIB_OBJS = \
    $(OBJ_DIR)\shellapi.obj  \
    $(OBJ_DIR)\window.obj \
    $(OBJ_DIR)\wprint.obj \
+   $(OBJ_DIR)\common.obj \
    $(OBJ_DIR)\drawwidg.obj \
    $(OBJ_DIR)\herrsys.obj \
    $(OBJ_DIR)\guimain.obj \
@@ -91,6 +94,9 @@ HWGUI_LIB_OBJS = \
    $(OBJ_DIR)\hcontrol.obj \
    $(OBJ_DIR)\hcwindow.obj \
    $(OBJ_DIR)\hdatepic.obj \
+   $(OBJ_DIR)\hdrawn.obj \
+   $(OBJ_DIR)\hdrawnbrw.obj \
+   $(OBJ_DIR)\hdrawncomb.obj \
    $(OBJ_DIR)\hdialog.obj \
    $(OBJ_DIR)\hedit.obj \
    $(OBJ_DIR)\hfreeimg.obj \
@@ -121,6 +127,7 @@ HWGUI_LIB_OBJS = \
    $(OBJ_DIR)\hsplash.obj \
    $(OBJ_DIR)\hmonthc.obj \
    $(OBJ_DIR)\hgrid.obj \
+   $(OBJ_DIR)\htrack.obj \
    $(OBJ_DIR)\htrackbr.obj \
    $(OBJ_DIR)\animat.obj \
    $(OBJ_DIR)\hanimat.obj \
@@ -178,7 +185,7 @@ $(OBJ_DIR)\barcode.c : $(SRC_DIR)\barcode.prg
 $(OBJ_DIR)\barcode.obj : $(OBJ_DIR)\barcode.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
-$(OBJ_DIR)\hbincnt.c : $(SRC_DIR)\hbincnt.prg
+$(OBJ_DIR)\hbincnt.c : $(CROSS_DIR)\hbincnt.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
 $(OBJ_DIR)\hbincnt.obj : $(OBJ_DIR)\hbincnt.c
@@ -226,6 +233,24 @@ $(OBJ_DIR)\hdatepic.c : $(SRC_DIR)\hdatepic.prg
 $(OBJ_DIR)\hdatepic.obj : $(OBJ_DIR)\hdatepic.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
+$(OBJ_DIR)\hdrawn.c : $(CROSS_DIR)\hdrawn.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
+$(OBJ_DIR)\hdrawn.obj : $(OBJ_DIR)\hdrawn.c
+   $(CC_EXE) $(CFLAGS) -fo$@ $**
+
+$(OBJ_DIR)\hdrawnbrw.c : $(CROSS_DIR)\hdrawnbrw.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
+$(OBJ_DIR)\hdrawnbrw.obj : $(OBJ_DIR)\hdrawnbrw.c
+   $(CC_EXE) $(CFLAGS) -fo$@ $**
+
+$(OBJ_DIR)\hdrawncomb.c : $(CROSS_DIR)\hdrawncomb.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
+$(OBJ_DIR)\hdrawncomb.obj : $(OBJ_DIR)\hdrawncomb.c
+   $(CC_EXE) $(CFLAGS) -fo$@ $**
+
 $(OBJ_DIR)\hdialog.c : $(SRC_DIR)\hdialog.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
@@ -250,13 +275,13 @@ $(OBJ_DIR)\hfreeimg.c : $(SRC_DIR)\hfreeimg.prg
 $(OBJ_DIR)\hfreeimg.obj : $(OBJ_DIR)\hfreeimg.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
-$(OBJ_DIR)\hfrmtmpl.c : $(SRC_DIR)\hfrmtmpl.prg
+$(OBJ_DIR)\hfrmtmpl.c : $(CROSS_DIR)\hfrmtmpl.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
 $(OBJ_DIR)\hfrmtmpl.obj : $(OBJ_DIR)\hfrmtmpl.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
-$(OBJ_DIR)\hgraph.c : $(SRC_DIR)\hgraph.prg
+$(OBJ_DIR)\hgraph.c : $(CROSS_DIR)\hgraph.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
 $(OBJ_DIR)\hgraph.obj : $(OBJ_DIR)\hgraph.c
@@ -284,6 +309,12 @@ $(OBJ_DIR)\hgrid.c : $(SRC_DIR)\hgrid.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
 $(OBJ_DIR)\hgrid.obj : $(OBJ_DIR)\hgrid.c
+   $(CC_EXE) $(CFLAGS) -fo$@ $**
+
+$(OBJ_DIR)\htrackbr.c : $(CROSS_DIR)\htrack.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
+$(OBJ_DIR)\htrackbr.obj : $(OBJ_DIR)\htrack.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
 $(OBJ_DIR)\htrackbr.c : $(SRC_DIR)\htrackbr.prg
@@ -538,7 +569,7 @@ $(OBJ_DIR)\hrebar.c : $(SRC_DIR)\hrebar.prg
 $(OBJ_DIR)\hrebar.obj : $(OBJ_DIR)\hrebar.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
-$(OBJ_DIR)\hlenta.c : $(SRC_DIR)\hlenta.prg
+$(OBJ_DIR)\hlenta.c : $(CROSS_DIR)\hlenta.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
 $(OBJ_DIR)\hlenta.obj : $(OBJ_DIR)\hlenta.c
@@ -550,6 +581,11 @@ $(OBJ_DIR)\hhyper.c : $(SRC_DIR)\hhyper.prg
 $(OBJ_DIR)\hhyper.obj : $(OBJ_DIR)\hhyper.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
+$(OBJ_DIR)\common.c : $(CROSS_DIR)\common.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
+$(OBJ_DIR)\common.obj : $(OBJ_DIR)\common.c
+   $(CC_EXE) $(CFLAGS) -fo$@ $**
 
 # ========================== 
 # PROCMISC.LIB Dependencies
@@ -583,6 +619,12 @@ $(OBJ_DIR)\hcedit.c : $(EDITOR_DIR)\hcedit.prg
    $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
 
 $(OBJ_DIR)\hcedit.obj : $(OBJ_DIR)\hcedit.c
+   $(CC_EXE) $(CFLAGS) -fo$@ $**
+
+$(OBJ_DIR)\hceditb.c : $(EDITOR_DIR)\hceditb.prg
+   $(HARBOUR_EXE) $(HARBOURFLAGS) $** -o$@
+
+$(OBJ_DIR)\hceditb.obj : $(OBJ_DIR)\hceditb.c
    $(CC_EXE) $(CFLAGS) -fo$@ $**
 
 $(OBJ_DIR)\hilight.c : $(EDITOR_DIR)\hilight.prg
