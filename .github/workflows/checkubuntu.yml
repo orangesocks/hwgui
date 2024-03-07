@@ -25,7 +25,7 @@ jobs:
       run: |
          sudo apt-get install gcc
          sudo apt-get install make
-         sudo apt-get install build-essential libgtk3.0-dev
+         sudo apt-get install build-essential libgtk3.0
          sudo apt-get install gnome-themes-standard
          sudo apt-get install git
          git clone https://github.com/harbour/core /tmp/harbour --depth 1
