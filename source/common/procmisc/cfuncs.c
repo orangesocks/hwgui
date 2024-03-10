@@ -738,7 +738,7 @@ static int changeutf8case( const char *szSrc, int iSrcLen, char **szDst,
 
          /* Reallocate buffer to 1.5 sizes of original */
          iAllocated = iAllocated + iAllocated / 2;
-         szReallocated = realloc( szTMPDst, iAllocated * sizeof( char ) );
+         szReallocated = (char*) realloc( szTMPDst, iAllocated * sizeof( char ) );
          /* Cannot reallocate memory */
          if( szReallocated == NULL )
          {
@@ -821,7 +821,9 @@ HB_FUNC( HWG_REDIRON )
 
 HB_FUNC( HWG_REDIROFF )
 {
+#if !defined(_MSC_VER)
    int istd = ( HB_ISNIL( 1 ) ) ? 1 : hb_parni( 1 );
+
    int fd;
 
    fflush( ( istd == 1 ) ? stdout : stderr );
@@ -837,6 +839,7 @@ HB_FUNC( HWG_REDIROFF )
       close( fd );
       clearerr( ( istd == 1 ) ? stdout : stderr );
    }
+#endif
 }
 
 #define BUFSIZE  16384
@@ -1014,11 +1017,12 @@ HB_FUNC( HWG_RUNCONSOLEAPP )
    if( iOutExist == 1 )
       CloseHandle( hOut );
    else if( iOutExist == 2 )
+   {
       if( read_all > 0 )
          hb_storclen_buffer( pOut, read_all, 3 );
       else
          hb_storc( "", 3 );
-
+   }
    CloseHandle( g_hChildStd_OUT_Rd );
 
    hb_retni( ( int ) dwExitCode );

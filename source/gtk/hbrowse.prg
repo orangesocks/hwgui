@@ -145,7 +145,7 @@ CLASS HBrowse INHERIT HControl
    DATA bHScrollPos                            // Called when user move browse through horizontal scroll bar
    DATA bEnter, bKeyDown, bUpdate, bRClick
    DATA ALIAS                                  // Alias name of browsed database
-   DATA x1, y1, x2, y2, width, height
+   DATA x1, y1, x2, y2, width, height   INIT 0
    DATA minHeight INIT 0
    DATA lEditable INIT .T.
    DATA lAppable  INIT .F.
@@ -214,7 +214,7 @@ CLASS HBrowse INHERIT HControl
    METHOD ButtonDbl( lParam )
    METHOD MouseMove( wParam, lParam )
    METHOD MouseWheel( nKeys, nDelta, nXPos, nYPos )
-   METHOD Edit( wParam, lParam )
+   METHOD Edit( wParam )
    METHOD APPEND() INLINE ( ::Bottom( .F. ), ::LineDown() )
    METHOD RefreshLine()
    METHOD Refresh( lFull )
@@ -323,88 +323,91 @@ METHOD onEvent( msg, wParam, lParam )  CLASS HBrowse
             Eval( ::bLostFocus, Self )
          ENDIF
 
-      ELSEIF msg == WM_HSCROLL
-         ::DoHScroll()
-
-      ELSEIF msg == WM_VSCROLL
-         ::DoVScroll( wParam )
+      ELSEIF msg == WM_DESTROY
+         ::End()
 
       ELSEIF msg == WM_COMMAND
          hwg_DlgCommand( Self, wParam, lParam )
 
 
-      ELSEIF msg == WM_KEYUP
-         IF wParam == GDK_Control_L .OR. wParam == GDK_Control_R
-            IF wParam == ::nCtrlPress
-               ::nCtrlPress := 0
+      ELSEIF ::oGet == Nil
+
+         IF msg == WM_HSCROLL
+            ::DoHScroll()
+
+         ELSEIF msg == WM_VSCROLL
+            ::DoVScroll( wParam )
+
+         ELSEIF msg == WM_KEYUP
+            IF wParam == GDK_Control_L .OR. wParam == GDK_Control_R
+               IF wParam == ::nCtrlPress
+                  ::nCtrlPress := 0
+               ENDIF
             ENDIF
+            retValue := 1
+         ELSEIF msg == WM_KEYDOWN
+            IF ::bKeyDown != Nil
+               IF !Eval( ::bKeyDown, Self, wParam )
+                  RETURN 1
+               ENDIF
+            ENDIF
+            IF wParam == GDK_Down        // Down
+               ::LINEDOWN()
+            ELSEIF wParam == GDK_Up    // Up
+               ::LINEUP()
+            ELSEIF wParam == GDK_Right    // Right
+               LineRight( Self )
+            ELSEIF wParam == GDK_Left    // Left
+               LineLeft( Self )
+            ELSEIF wParam == GDK_Home    // Home
+               ::DoHScroll( SB_LEFT )
+            ELSEIF wParam == GDK_End    // End
+               ::DoHScroll( SB_RIGHT )
+            ELSEIF wParam == GDK_Page_Down    // PageDown
+               IF ::nCtrlPress != 0
+                  ::BOTTOM()
+               ELSE
+                  ::PageDown()
+               ENDIF
+            ELSEIF wParam == GDK_Page_Up    // PageUp
+               IF ::nCtrlPress != 0
+                  ::TOP()
+               ELSE
+                  ::PageUp()
+               ENDIF
+            ELSEIF wParam == GDK_Return .OR. wParam == GDK_KP_Enter // Enter
+               ::Edit()
+            ELSEIF wParam == GDK_Control_L .OR. wParam == GDK_Control_R
+               IF ::nCtrlPress == 0
+                  ::nCtrlPress := wParam
+               ENDIF
+            ELSEIF ::lAutoEdit .AND. wParam >= 33 .AND. wParam <= 126
+               ::Edit( wParam )
+            ENDIF
+            retValue := 1
+
+         ELSEIF msg == WM_LBUTTONDOWN
+            ::ButtonDown( lParam )
+
+         ELSEIF msg == WM_LBUTTONUP
+            ::ButtonUp( lParam )
+
+         ELSEIF msg == WM_LBUTTONDBLCLK
+            ::ButtonDbl( lParam )
+
+         ELSEIF msg == WM_RBUTTONDOWN
+            ::ButtonRDown( lParam )
+
+         ELSEIF msg == WM_MOUSEMOVE
+            ::MouseMove( wParam, lParam )
+
+         ELSEIF msg == WM_MOUSEWHEEL
+            ::MouseWheel( hwg_Loword( wParam ), ;
+               Iif( hwg_Hiword( wParam ) > 32768, ;
+               hwg_Hiword( wParam ) - 65535, hwg_Hiword( wParam ) ), ;
+               hwg_Loword( lParam ), hwg_Hiword( lParam ) )
          ENDIF
-         retValue := 1
-      ELSEIF msg == WM_KEYDOWN
-         IF ::bKeyDown != Nil
-            IF !Eval( ::bKeyDown, Self, wParam )
-               RETURN 1
-            ENDIF
-         ENDIF
-         IF wParam == GDK_Down        // Down
-            ::LINEDOWN()
-         ELSEIF wParam == GDK_Up    // Up
-            ::LINEUP()
-         ELSEIF wParam == GDK_Right    // Right
-            LineRight( Self )
-         ELSEIF wParam == GDK_Left    // Left
-            LineLeft( Self )
-         ELSEIF wParam == GDK_Home    // Home
-            ::DoHScroll( SB_LEFT )
-         ELSEIF wParam == GDK_End    // End
-            ::DoHScroll( SB_RIGHT )
-         ELSEIF wParam == GDK_Page_Down    // PageDown
-            IF ::nCtrlPress != 0
-               ::BOTTOM()
-            ELSE
-               ::PageDown()
-            ENDIF
-         ELSEIF wParam == GDK_Page_Up    // PageUp
-            IF ::nCtrlPress != 0
-               ::TOP()
-            ELSE
-               ::PageUp()
-            ENDIF
-         ELSEIF wParam == GDK_Return  // Enter
-            ::Edit()
-         ELSEIF wParam == GDK_Control_L .OR. wParam == GDK_Control_R
-            IF ::nCtrlPress == 0
-               ::nCtrlPress := wParam
-            ENDIF
-         ELSEIF ::lAutoEdit .AND. wParam >= 33 .AND. wParam <= 126
-            ::Edit( wParam, lParam )
-         ENDIF
-         retValue := 1
-
-      ELSEIF msg == WM_LBUTTONDOWN
-         ::ButtonDown( lParam )
-
-      ELSEIF msg == WM_LBUTTONUP
-         ::ButtonUp( lParam )
-
-      ELSEIF msg == WM_LBUTTONDBLCLK
-         ::ButtonDbl( lParam )
-
-      ELSEIF msg == WM_RBUTTONDOWN
-         ::ButtonRDown( lParam )
-
-      ELSEIF msg == WM_MOUSEMOVE
-         ::MouseMove( wParam, lParam )
-
-      ELSEIF msg == WM_MOUSEWHEEL
-         ::MouseWheel( hwg_Loword( wParam ), ;
-            If( hwg_Hiword( wParam ) > 32768, ;
-            hwg_Hiword( wParam ) - 65535, hwg_Hiword( wParam ) ), ;
-            hwg_Loword( lParam ), hwg_Hiword( lParam ) )
-      ELSEIF msg == WM_DESTROY
-         ::End()
       ENDIF
-
    ENDIF
 
    RETURN retValue
@@ -1107,7 +1110,7 @@ METHOD LineOut( nstroka, vybfld, hDC, lSelected, lClear ) CLASS HBrowse
                   ENDIF
 
                   IF !Empty( sviv := AllTrim( FLDSTR( Self, nCol ) ) )
-                     hwg_Drawtext( hDC, sviv, x + ::aPadding[1], y1 + ::aPadding[2], x2 + 1 + ::aPadding[3], y2 - 1 - ::aPadding[4], oColumn:nJusLin, .T. )
+                     hwg_Drawtext( hDC, sviv, x + ::aPadding[1], y1 + ::aPadding[2], x2 - 1 - ::aPadding[3], y2 - 1 - ::aPadding[4], oColumn:nJusLin, .T. )
                   ENDIF
                   //IF !Empty( aCB := hwg_getPaintCB( aCB, PAINT_LINE_ITEM ) )
                   IF !Empty( oCB ) .AND. !Empty( aCB := oCB:Get( PAINT_LINE_ITEM ) )
@@ -1526,8 +1529,6 @@ METHOD ButtonDown( lParam ) CLASS HBrowse
    LOCAL step, res := .F. , nrec
    LOCAL maxPos, nPos
    LOCAL ym := hwg_Hiword( lParam ), xm := hwg_Loword( lParam ), x1, fif
-   * Variables not used
-   * LOCAL hBrw := ::handle
 
    nLine := iif( ym < ::y1, 0, Int( (ym - ::y1 ) / (::height + 1 ) ) + 1 )
    step := nLine - ::rowPos
@@ -1560,6 +1561,7 @@ METHOD ButtonDown( lParam ) CLASS HBrowse
                   IF hwg_SetAdjOptions( ::hScrollV, nPos )
                      ::lSetAdj := .T.
                   ENDIF
+                  ::nScrollV := nPos
                ENDIF
             ENDIF
             res := .T.
@@ -1574,6 +1576,7 @@ METHOD ButtonDown( lParam ) CLASS HBrowse
                maxPos := hwg_getAdjValue( ::hScrollH, 1 ) - hwg_getAdjValue( ::hScrollH, 4 )
                nPos := Iif( fif == 1, 0, Iif( fif = Len(::aColumns ), maxpos, ;
                   Int( ( maxPos + 1 ) * fif/Len( ::aColumns ) ) ) )
+               ::nScrollH := nPos
                hwg_SetAdjOptions( ::hScrollH, nPos )
             ENDIF
             res := .T.
@@ -1690,7 +1693,7 @@ METHOD MouseMove( wParam, lParam ) CLASS HBrowse
    LOCAL xPos := hwg_Loword( lParam ), yPos := hwg_Hiword( lParam )
    LOCAL x := ::x1, i, res := .F. , nLen
 
-   IF !::active .OR. Empty( ::aColumns ) .OR. ::x1 == Nil
+   IF !::active .OR. Empty( ::aColumns ) .OR. ::x1 == Nil .OR. ::oGet != Nil
       RETURN Nil
    ENDIF
 
@@ -1753,22 +1756,14 @@ METHOD MouseWheel( nKeys, nDelta, nXPos, nYPos ) CLASS HBrowse
    hwg_Setfocus( ::area )
    RETURN Nil
 
-METHOD Edit( wParam, lParam ) CLASS HBrowse
+METHOD Edit( wParam ) CLASS HBrowse
 
-   LOCAL fipos, lRes, x1, y1, fif, nWidth, rowPos
+   LOCAL fipos, lRes, x1, y1, fif, nWidth, rowPos, lAppM := ::lAppMode
    LOCAL oColumn, type
-   LOCAL mvarbuff , bMemoMod , owb1 , owb2 , oModDlg , bclsbutt
+   LOCAL mvarbuff, bMemoMod, owb1, owb2, oModDlg, bclsbutt
    LOCAL lSaveMem    && DF7BE
 
    lSaveMem := .T.
-
-   * Variables not used
-   * lReadExit
-
-   * Parameters not used
-   HB_SYMBOL_UNUSED(wParam)
-   HB_SYMBOL_UNUSED(lParam)
-
 
    bclsbutt := .T.
 
@@ -1827,11 +1822,14 @@ METHOD Edit( wParam, lParam ) CLASS HBrowse
                STYLE ES_AUTOHSCROLL           ;
                FONT ::oFont                   ;
                PICTURE oColumn:picture        ;
-               VALID { ||VldBrwEdit( Self, fipos ) }
+               VALID { ||VldBrwEdit( Self, fipos, lAppM ) }
             ::oGet:Show()
             hwg_Setfocus( ::oGet:handle )
             hwg_edit_SetPos( ::oGet:handle, 1 )
             ::oGet:bAnyEvent := { |o, msg, c| HB_SYMBOL_UNUSED(o),  GetEventHandler( Self, msg, c ) }
+            IF !Empty( wParam )
+               ::oGet:onEvent( WM_KEYDOWN, wParam, 0 )
+            ENDIF
          ELSE  // memo edit
          * ===================================== *
          * Special dialog for memo edit (DF7BE)
@@ -1865,7 +1863,7 @@ METHOD Edit( wParam, lParam ) CLASS HBrowse
              * write out edited memo field
              ::varbuf := ::oEdit:GetText()
              * Store new memo contents
-             VldBrwEdit( Self, fipos , .T. )
+             VldBrwEdit( Self, fipos, lAppM, .T. )
              // hwg_MsgInfo("Memo saved")  && Debug
             ENDIF  && lSaveMem
            ENDIF   && bMemoMod
@@ -1901,7 +1899,7 @@ STATIC FUNCTION GetEventHandler( oBrw, msg, cod )
 
    RETURN 0
 
-STATIC FUNCTION VldBrwEdit( oBrw, fipos , bmemo )
+STATIC FUNCTION VldBrwEdit( oBrw, fipos, lAppM, bmemo )
 * Purpose: Store edited contents
 * Parameter oEdit only used, if memo edit is used.
 
@@ -1927,6 +1925,9 @@ STATIC FUNCTION VldBrwEdit( oBrw, fipos , bmemo )
    ENDIF
 
    IF .NOT. bESCkey
+      IF !Empty( oColumn:bValid ) .AND. !Eval( oColumn:bValid, oBrw:varbuf, oBrw:oGet )
+         RETURN .F.
+      ENDIF
       IF oColumn:aList != Nil
          IF ValType( oBrw:varbuf ) == 'N'
             oBrw:varbuf := nChoic
@@ -1934,7 +1935,7 @@ STATIC FUNCTION VldBrwEdit( oBrw, fipos , bmemo )
             oBrw:varbuf := oColumn:aList[nChoic]
          ENDIF
       ENDIF
-      IF oBrw:lAppMode
+      IF lAppM
          oBrw:lAppMode := .F.
          IF oBrw:type == BRW_DATABASE
             ( oBrw:alias ) -> ( dbAppend() )
@@ -2097,7 +2098,6 @@ FUNCTION hwg_CREATEARLIST( oBrw, arr )
    oBrw:type  := BRW_ARRAY
    oBrw:aArray := arr
    IF Len( oBrw:aColumns ) == 0
-      // oBrw:aColumns := {}
       IF ValType( arr[1] ) == "A"
          FOR i := 1 TO Len( arr[1] )
             oBrw:AddColumn( HColumn():New( ,hwg_ColumnArBlock() ) )
@@ -2162,7 +2162,6 @@ FUNCTION hwg_VScrollPos( oBrw, nType, lEof, nPos )
       IF hwg_SetAdjOptions( oBrw:hScrollV, nPos )
           obrw:lSetAdj := .T.
       ENDIF
-
       oBrw:nScrollV := nPos
    ELSE
       oldRecno := Eval( oBrw:bRecnoLog, oBrw )
@@ -2183,6 +2182,17 @@ FUNCTION hwg_VScrollPos( oBrw, nType, lEof, nPos )
          oBrw:Refresh()
       ENDIF
    ENDIF
+
+   RETURN Nil
+
+FUNCTION hwg_HScrollPos( oBrw, nType, lEof, nPos )
+
+   HB_SYMBOL_UNUSED( nType )
+   HB_SYMBOL_UNUSED( lEof )
+
+   hwg_SetAdjOptions( oBrw:hScrollH, nPos )
+   oBrw:nScrollH := nPos
+   oBrw:Refresh()
 
    RETURN Nil
 

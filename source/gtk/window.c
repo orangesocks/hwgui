@@ -53,6 +53,7 @@
 #define WM_SIZE                           5
 #define WM_SETFOCUS                       7
 #define WM_KILLFOCUS                      8
+#define WM_PAINT                         15
 #define WM_KEYDOWN                      256    // 0x0100
 #define WM_KEYUP                        257    // 0x0101
 #define WM_MOUSEMOVE                    512    // 0x0200
@@ -236,7 +237,8 @@ HB_FUNC( HWG_INITMAINWINDOW )
 
    if (szFile)
    {
-        gtk_window_set_default_icon( szFile->handle );
+        //gtk_window_set_default_icon( szFile->handle );
+        gtk_window_set_icon(GTK_WINDOW(hWnd), szFile->handle  );
    }
    /* Set Background */
    if (szBackFile)
@@ -272,21 +274,17 @@ HB_FUNC( HWG_CREATEDLG )
    int y = hb_itemGetNI( GetObjectVar( pObject, "NTOP" ) );
    int width = hb_itemGetNI( GetObjectVar( pObject, "NWIDTH" ) );
    int height = hb_itemGetNI( GetObjectVar( pObject, "NHEIGHT" ) );
-   PHB_ITEM pIcon = GetObjectVar( pObject, "OICON" );
-   PHB_ITEM pBmp = GetObjectVar( pObject, "OBMP" );
-   PHWGUI_PIXBUF szFile = NULL;
-   PHWGUI_PIXBUF szBackFile = NULL;
+   //PHB_ITEM pIcon = GetObjectVar( pObject, "OICON" );
+   //PHB_ITEM pBmp = GetObjectVar( pObject, "OBMP" );
+   PHWGUI_PIXBUF szFile = HB_ISPOINTER(2) ? (PHWGUI_PIXBUF) HB_PARHANDLE(2): NULL;
+   PHWGUI_PIXBUF szBackFile = HB_ISPOINTER(3) ? (PHWGUI_PIXBUF) HB_PARHANDLE(3): NULL;
 
-   /* Icon */
-   if (!HB_IS_NIL(pIcon))
-   {
+/*
+   if( HB_IS_OBJECT(pIcon) )
       szFile = (PHWGUI_PIXBUF) hb_itemGetPtr( GetObjectVar(pIcon,"HANDLE") );
-   }
-   /* Background image */
-   if (!HB_IS_NIL(pBmp))
-   {
+   if( HB_IS_OBJECT(pBmp) )
       szBackFile = (PHWGUI_PIXBUF) hb_itemGetPtr( GetObjectVar(pBmp,"HANDLE") );
-   }
+*/
    /* Background style*/
    style = gtk_style_new();
    if (szBackFile)
@@ -759,10 +757,18 @@ static gint cb_event( GtkWidget *widget, GdkEvent * event, gchar* data )
          p1 = ( ((GdkEventFocus*)event)->in )? WM_SETFOCUS : WM_KILLFOCUS;
          p2 = p3 = 0;
       }
+      else if( event->type == GDK_EXPOSE )
+      {
+         p1 = WM_PAINT;
+         p2 = ( ((GdkEventExpose*)event)->area.x & 0xffff ) |
+            ( (((GdkEventExpose*)event)->area.y << 16 ) & 0xffff0000 );
+         p3 = ( ((GdkEventExpose*)event)->area.width & 0xffff ) |
+            ( (((GdkEventExpose*)event)->area.height << 16 ) & 0xffff0000 );
+      }
       else
          sscanf( (char*)data,"%ld %ld %ld",&p1,&p2,&p3 );
 
-      hb_vmPushSymbol( hb_dynsymSymbol( pSym_onEvent ) );
+      hb_vmPushSymbol( hb_dynsymSymbol( pSym_onEvent  ) );
       hb_vmPush( ( PHB_ITEM ) gObject );
       hb_vmPushLong( p1 );
       hb_vmPushLong( p2 );
@@ -953,12 +959,7 @@ HB_FUNC( HWG_WINDOWMINIMIZE )
 
 PHB_ITEM GetObjectVar( PHB_ITEM pObject, char* varname )
 {
-#ifdef __XHARBOUR__
    return hb_objSendMsg( pObject, varname, 0 );
-#else
-   hb_objSendMsg( pObject, varname, 0 );
-   return hb_param( -1, HB_IT_ANY );
-#endif
 }
 
 void SetObjectVar( PHB_ITEM pObject, char* varname, PHB_ITEM pValue )

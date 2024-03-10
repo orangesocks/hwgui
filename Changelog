@@ -15,6 +15,433 @@
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+2024-02-29 21:35 UTC-0200 Jose Quintas
+   * source/winapi/printdos.prg
+      * adjust to compile under -w3 -es2
+
+2024-02-29 19:27 UTC-0200 Jose Quintas
+  * source/cross/hdraw.prg
+     * static function PaintArrow() used on codeblock, now compiles on xharbour too
+
+2024-02-29 14:01 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hcombo.prg
+    ! Bug fixed in ::Refresh()
+
+2024-02-29 12:38 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hbrowse.prg
+    ! Bug fixed with alignment to a right side
+
+2024-02-29 11:36 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hbrowse.prg
+    ! Mouse and some other events disabled while cell editing
+  * source/winapi/hmisc.prg
+    ! hwg_Has_Win_Euro_Support() : fix for xHarbour
+
+2024-02-21 14:05 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/winapi/hdialog.prg
+  * source/winapi/hwindow.prg
+    * New var added to HWindow clacc, :lBmpSpread.
+      If it is set to .T. (default), the background bitmap is spread over the window,
+      if it is set to .F., the bitmap is stretched.
+
+2024-02-21 11:25 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/winapi/freeimg.c
+  * include/freeimage.h
+    * Renamed to hwg_freeimage.h for to not conflict with harbour's
+  * source/winapi/hmisc.prg
+    * Added #ifdef __XHARBOUR__ to hwg_Has_Win_Euro_Support()
+
+2024-02-21 10:54 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hcombo.prg
+  * source/winapi/hcombo.prg
+    * Check for an index value added in :SetItem()
+
+2024-02-21 10:10 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hsayimg.prg
+  * source/winapi/hsayimg.prg
+  * source/winapi/hfreeimg.prg
+    ! Problem fixed, reported by Wilfried Brunken.
+      Please, do not use samples/ directory to report about problems!
+
+2024-02-20 15:49 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/common/procmisc/cfuncs.c
+    ! Warning fixed
+  * utils/hwbuild/hwb.prg
+    * Some enhancements
+
+2024-02-08 16:07 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/hwbuild/hwb.prg
+    ! Small fix
+
+2024-02-07 12:40 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/hwbuild/hwb.prg
+    ! Small fix
+
+2024-02-06 16:35 UTC+0100 Wilfried Brunken DF7BE
+  * doc/hwgdoc_commands.html
+  * image/cancel.bmp (New)
+  * samples/bitmapbug.hbp
+  * samples/bitmapbug.prg
+    ! Handle of bug in command @<x>,<y> BITMAP ... SHOW (Class HBITMAP)
+
+2024-01-30 09:54 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/window.c
+    ! Expose event: wParam and lParam parameters contains the updated area's coordinates now
+  * utils/tutorial/tutor_eng.xml
+    * hwg_Vscrollpos() added to "Browse of dbf"
+
+2024-01-12 15:52 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/hwgextern.ch
+    * hwg_processmessage added
+
+2024-01-12 15:47 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/hwgextern.ch
+    * hwg_sleep added
+
+2024-01-12 15:42 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/tutorial/tutor_eng.xml
+    * "Progress bar" updated, "Drawn progress bar" added
+
+2024-01-12 13:10 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/guilib.ch
+    * HwGUI version is changed to 2.23 dev build 8
+  * source/gtk/hbrowse.prg
+  * source/gtk/hdialog.prg
+  * source/gtk/window.c
+    ! Fixes
+  * utils/tutorial/tutor_eng.xml
+    * ::bValid added for a column to the "Browse of dbf"
+
+2023-12-22 07:51 UTC-0200 Jose Quintas
+  * contrib/gthwg/tests/test1.prg
+    * reduce special characters need
+
+2023-12-22 09:45 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/guilib.ch
+    * HwGUI version is changed to 2.23 build 7
+  * whatsnew.txt
+    * Updated for v2.23 build 7
+
+2023-12-21 16:28 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/hwbuild/hwb.prg
+  * utils/hwbuild/readme.en
+  * utils/hwbuild/hwbuild.ini
+    * New enhancements
+
+2023-12-21 10:15 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hbrowse.prg
+    ! Fixes
+
+2023-12-20 09:04 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hbrowse.prg
+    ! An accidentally erased fix has been restored
+
+2023-12-19 13:12 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/winapi/hcontrol.prg
+    ! Small fix
+  * utils/tutorial/tutor_res.prg
+    * Images added
+  * utils/tutorial/tutor_eng.xml
+    * "Get system"/"Dialog with text Gets" - icons on buttons added
+
+2023-12-19 10:33 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/control.c
+    * Added support for tab's TCS_BOTTOM style
+  * source/gtk/hbrowse.prg
+    ! Fixed error in appmode
+  * utils/hwbuild/hwb.prg
+    * harbour flags changed
+
+2023-12-18 12:32 UTC-0200 Jose Quintas
+   * test/dlgauto/source/frm_class.prg
+   * test/dlgauto/sourcefrm_edit.prg
+   * test/dlgauto/source/lib_hwgui.prg
+   * test/dlgauto/source/test.hbp
+   * test/dlgauto/source/test.prg
+     * key field before edit all
+     * ghost edit as workaround to last edit bug
+     * some linux changes
+
+2023-12-18 13:15 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/guilib.ch
+    * IMAGE clause added to @ ... BUTTON command
+  * source/gtk/control.c
+    * hwg_createbutton() fixed, hwg_button_setimage() added
+  * source/gtk/hcontrol.prg
+    * hbuttonex removed
+    * :SetImage( oImage ) added to hbutton
+  * source/winapi/hcontrol.prg
+    * :SetImage( oImage ) added to hbutton
+  * source/gtk/hbrowse.prg
+   * Valid should work now
+
+2023-12-17 20:16 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/control.c
+    ! Fixed problem with tab
+  * source/gtk/drawtext.c
+    ! Fixed problem with combobox and groupbox fonts
+  * source/gtk/hbrowse.prg
+   * Minor correction
+
+2023-12-17 15:38 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/drawtext.c
+    ! Fixed problem with editbox fonts
+
+2023-12-16 09:20 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/control.c
+  * source/gtk/hedit.prg
+    ! Fixed some incompatibilities with winapi version
+    ! Fixed problems with colors in edit widget
+
+2023-12-15 14:15 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/Readme.txt
+  * utils/bincnt/Readme.txt
+    * readme modified
+  - utils/bincnt/Crackled_items.png
+
+2023-12-15 11:10 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/bincnt/bincnt.prg
+    * Some enhancements
+  + utils/tutorial/tutor_res.prg
+    * Added resources prg file, created by bincnt
+  * utils/tutorial/tutor.prg
+    * Changed to work with resources
+  + utils/tutorial/tutor.hwprj
+    + Added hwbuilder project file to build tutor
+  * utils/tutorial/tutor.hbp
+    * tutor_res added
+  - utils/tutorial/bld.bat
+  - utils/tutorial/bldgtkwin.bat
+  - utils/tutorial/bldgw.bat
+  - utils/tutorial/build.sh
+  - utils/tutorial/hbmk.sh
+
+2023-12-14 17:01 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/control.c
+  * source/gtk/hedit.prg
+    ! Position after mouse click in empty edit box fixed
+  * source/cross/hbincnt.prg
+  * utils/bincnt/bincnt.prg
+    * Added crossplatform possibility to have resources, embedded in executable file
+
+2023-12-13 21:07 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/cross/hbincnt.prg
+    * Import from folder added
+
+2023-12-13 15:53 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/drawwidg.prg
+    ! Fixes and cleanup
+
+2023-12-13 14:54 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/cross/hbincnt.prg
+    ! Small fix
+  * source/gtk/draw.c
+    ! hwg_openimage() fixed
+
+2023-12-13 13:32 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/cross/hbincnt.prg
+    * Added code to resize the container content
+  * utils/bincnt/bincnt.prg
+    * Added preview and info dialogs
+
+2023-12-12 11:34 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/cross/hdrawncomb.prg
+    * DATESELECT size and position corrected
+  * utils/tutorial/tutor_eng.xml
+    ! Small fix
+
+2023-12-11 17:53 UTC-0200 Jose Quintas
+   * test/dlgauto/*
+     * fully functional, can compile using hwgui or others
+     * can be used as a basic reference to/from hwgui (lib_xxx.prg)
+     * more icons but smaller than previous one
+     TODO: new controls for windows/linux
+
+2023-12-11 16:56 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/cross/hdrawncomb.prg
+  * contrib/contrib.hwprj
+    ! Fixes
+
+2023-12-11 15:10 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/guilib.ch
+    * GET DATESELECT command added
+  * source/common/editor/hceditb.prg
+    * :bSetGet data item added
+  * source/cross/hdrawncomb.prg
+    * GET DATESELECT support added
+  * utils/hwbuild/hwb.prg
+    * Some enhancements
+  * utils/tutorial/tutor_eng.xml
+    * GET DATESELECT instead of GET DATEPICKER
+  * contrib/contrib.hwprj
+  * hwgui.hwprj
+    ! Fixes
+
+2023-12-10 16:36 UTC-0200 Jose Quintas
+  * utils/tutorial/tutor.hbp
+    * space is not valid on hbp for conditional use
+
+2023-12-08 11:14 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hbrowse.prg
+    * hwg_HScrollPos() added for compatibility with winapi version
+  * utils/hwbuild/hwb.prg
+  * utils/hwbuild/readme.en
+    * Help info updated
+
+2023-12-07 16:08 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  + utils/hwbuild/readme.en
+
+2023-12-07 13:52 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/cross/hdrawn.prg
+    * HDrawnArrow class finished
+  * source/cross/hdrawncomb.prg
+    * HDrawn Updown rewritten to use HDrawnArrow
+  * utils/hwbuild/hwb.prg
+    * Library creation flags support added
+  * utils/tutorial/tutor_eng.xml
+    * HDrawnArrow sample added to "Select style"
+
+2023-12-06 17:02 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/hwgextern.ch
+  * source/gtk/hcontrol.prg
+  * source/winapi/hcontrol.prg
+  * source/cross/hdrawn.prg
+    * Fixes, HDrawnArrow class added
+  * utils/hwbuild/hwb.prg
+    * Fixes and enhancements, .rc support added
+  * utils/tutorial/tutor_eng.xml
+
+2023-12-05 11:15 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/cross/hdrawn.prg
+    * :bPaintItem added
+  * source/winapi/registry.c
+  * source/winapi/winreg.c
+    * clashes fixed
+  * utils/hwbuild/hwb.prg
+    * Further enhancements
+
+2023-12-04 11:03 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  + contrib/contrib.hwprj
+  + utils/dbc/dbc.hwprj
+  + utils/designer/designer.hwprj
+  + utils/editor/editor.hwprj
+    + Hwbuilder project files added
+  * utils/hwbuild/hwb.prg
+    * Further enhancements
+
+2023-12-01 17:39 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/editor/hcediext.prg
+    ! Small fix
+  * utils/hwbuild/hwb.prg
+    * Further enhancements
+  * utils/tutorial/tutor_eng.xml
+    * Module enhanced "Select style"
+
+2023-11-30 16:45 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * hwgui.hwprj
+
+2023-11-30 16:43 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/common/editor/hceditb.prg
+    * :Skip() method changed to allow moving betwwen combine drawn controls with edit
+  * utils/hwbuild/hwb.prg
+    * Further enhancements
+  * utils/tutorial/tutor_eng.xml
+    * Module added "Select style"
+
+2023-11-30 11:33 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * utils/tutorial/tutor_eng.xml
+    * Colors changed in last added module
+
+2023-11-30 10:59 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/winapi/misc.c
+    ! Small fix for UNICODE mode
+  * utils/hwbuild/hwb.prg
+    ! Fixes
+  * utils/tutorial/tutor_eng.xml
+    * Module added "Array of browse" to "Advanced using of controls" section
+
+2023-11-29 14:22 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  + hwgui.hwprj
+    + Project file to build hwgui libraries, using HwBuilder
+  * source/cross/hdrawnbrw.prg
+  * utils/hwbuild/hwb.prg
+  * utils/tutorial/tutor.prg
+    * Further enhancements
+  * utils/tutorial/tutor_eng.xml
+
+2023-11-28 11:32 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/winapi/misc.c
+    * hwg_activatekeyboardlayout() returns now a current keyboard layout
+  - utils/hwbuild/hwbuild.prg
+  + utils/hwbuild/hwb.prg
+    * File renamed to be more short
+    * Further enhancements
+
+2023-11-27 10:06 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * include/guilib.h
+    * #ifdef HWG_USE_POINTER_ITEM is changed to #ifndef HWG_NO_USE_POINTER_ITEM
+      for to remove HWG_USE_POINTER_ITEM from build scripts, because it is a
+      default option for a long time.
+  - utils/hwbuild/template.hwg
+  + utils/hwbuild/template.hwprj
+    * File renamed. HwBuild project files will have ".hwprj" extention.
+  * utils/hwbuild/hwbuild.prg
+    * Further enhancements
+
+2023-11-24 15:38 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/drawwidg.prg
+    ! Small fix
+  * utils/hwbuild/hwbuild.ini
+  * utils/hwbuild/hwbuild.prg
+    * New enhancements
+
+2023-11-24 10:44 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/drawwidg.prg
+  * source/winapi/drawwidg.prg
+    * Two methods added to HFont class: :SaveToStr(), :LoadFromStr(s) - to make it easy
+      to keep fonts in ini files
+  - source/gtk/hlistbox.prg
+  + test/hlistbox.prg
+  - source/gtk/listbox.c
+  + test/listbox.c
+    * hlistbox.prg and listbox.c moved from gtk to test, because they are not compileable.
+      Source directories must contain working code only!
+  * utils/hwbuild/hwbuild.ini
+  * utils/hwbuild/hwbuild.prg
+    * Added support for msvc and many other enhancements
+
+2023-11-21 14:29 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  + utils/hwbuild/hwbuild.hbp
+  + utils/hwbuild/hwbuildc.hbp
+    + hbp files added to build
+      hwbuild - GUI version of hwbuild
+      hwbuildc - console version of hwbuild
+  * makefile.vc
+    ! Missing listbox.c rules added
+
+2023-11-21 14:37 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/common/procmisc/cfuncs.c
+  * source/winapi/draw.c
+    ! Warnings fixed for msvc
+  * samples/bldvc.bat updated
+  + utils/hwbuild
+  + utils/hwbuild/hwbuild.ini
+  + utils/hwbuild/hwbuild.prg
+  + utils/hwbuild/template.hwg
+    + hwbuild utility added
+
+2023-11-18 18:45 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/common/editor/hcedit.prg
+  * source/common/editor/hcedit_l.c
+    ! Fixes
+
+2023-11-18 13:25 UTC+0300 Alexander Kresin <alex@belacy.ru>
+  * source/gtk/hpanel.prg
+  * source/winapi/hpanel.prg
+  * source/common/editor/hcedit.prg
+    ! Fixes
+  * utils/tutorial/tutor_eng.xml
+
 2023-11-16 19:33 UTC+0300 Alexander Kresin <alex@belacy.ru>
   * utils/tutorial/tutor.prg
     ! Warnings fixed
@@ -218,7 +645,7 @@
 2023-10-13 15:55 UTC+0300 Alexander Kresin <alex@belacy.ru>
   * utils/tutorial/hwgrun.prg
   * utils/tutorial/tutor.prg
-    * Tutorial updated    
+    * Tutorial updated
 
 2023-10-13 14:51 UTC+0300 Alexander Kresin <alex@belacy.ru>
   * source/common/procmisc/cfuncs.c
@@ -962,7 +1389,7 @@
   * utils/dbc/modistru.prg
     ! Fixed
 
-2023-07-31 21:05 UTC-0200 José Quintas
+2023-07-31 21:05 UTC-0200 Jose Quintas
   * source/winapi/tmci.prg
     * removed wrong descripton.
 
@@ -1004,7 +1431,7 @@
   * source/gtk/drawwidg.prg
   * source/winapi/drawwidg.prg
     * ::nBmpStyle added to HStyle class, and appropriate parameter in HStyle():New() method.
-      It defines, how the bitmap is drawing, spreading, centered, or stretched�
+      It defines, how the bitmap is drawing, spreading, centered, or stretched\FE
 
 2023-07-27 09:00 UTC+0300 Alexander Kresin <alex@belacy.ru>
   * include/guilib.ch
@@ -1041,7 +1468,7 @@
      hwg_GdiplusOpenImage() function added, HBitmap():Addfile() changed to
      use hwg_Gdiplus_OpenImage(), if hwg_OpenImage() is failed.
 
-2023-07-25 20:14 UTC-0200 José Quintas
+2023-07-25 20:14 UTC-0200 Jose Quintas
    - test/mixed/*
    + test/dlgauto/*
      ! no more mixed, now single autoapp for tests purpose
@@ -1183,17 +1610,17 @@
   * whatsnew.txt
     * Updated for v2.23 build 3
 
-2023-07-09 15:30 UTC-0200 José Quintas
+2023-07-09 15:30 UTC-0200 Jose Quintas
    * test/mixed/dlgautomain.prg
      ! my mistake on delete method declaration
 
-2023-07-09 13:39 UTC-0200 José Quintas
+2023-07-09 13:39 UTC-0200 Jose Quintas
    * samples/grid_5.prg
      ! close dbf. Now can run dialog again without error.
    * test/mixed/dlgautomain.prg
      ! delete method
 
-2023-07-08 19:02 UTC-0200 José Quintas
+2023-07-08 19:02 UTC-0200 Jose Quintas
    * test/mixed/dlgauto.prg
    * text/mixed/dlgautoedit.prg
      ! 3 edit style options, color in get focus, page change
@@ -1216,7 +1643,7 @@
    * contrib/tests/test1.prg
      * Sample rewritten
 
-2023-06-26 14:00 UTC-0200 José Quintas
+2023-06-26 14:00 UTC-0200 Jose Quintas
    * test/mixed/dlgauto.ch
    * test/mixed/dlgauto.prg
    * test/mixed/dlgautobtn.prg
@@ -1224,23 +1651,23 @@
    * test/mixed/dlgautomain.prg
      ! label as title of hedit, option to change label text
 
-2023-06-21 11:10 UTC-0200 José Quintas
+2023-06-21 11:10 UTC-0200 Jose Quintas
    * test/mixed/dlgauto.ch
    * test/mixed/dlgautoedit.prg
      ! tab and panel when EditList > 30
 
-2023-06-19 02:01 UTC-0200 José Quintas
+2023-06-19 02:01 UTC-0200 Jose Quintas
    * test/mixed/dlgautoedit.prg
      ! FieldNum() on EditCreate(): Now initial values are not Nil, and HEdit uses correct valtype
 
-2023-06-19 18:55 UTC-0200 José Quintas
+2023-06-19 18:55 UTC-0200 Jose Quintas
    + test/mixed/dlgauto.ch
    * test/mixed/dlgautobtn.prg
    * test/mixed/dlgautoedit.prg
    * test/mixed/dlgautomain.prg
      ! changed/moved #defines to solve an error
 
-2023-06-18 13:33 UTC-0200 José Quintas
+2023-06-18 13:33 UTC-0200 Jose Quintas
    * test/mixed/dlgauto.prg
    * test/mixed/dlgautobtn.prg
    - test/mixed/dlgautodat.prg
@@ -1253,7 +1680,7 @@
      ! removed wvg call on dlgmenu, if want compile using hwgui only
      TODO: numeric get need to be edited from right ?
 
-2023-06-15 08:10 UTC-0200 José Quintas
+2023-06-15 08:10 UTC-0200 Jose Quintas
    * .github/workflows/checkubuntu.yml
    * .github/workflows/checkwindows.yml
       ! Changed to harbour 3.2
@@ -1349,7 +1776,7 @@
    * contrib/gthwg/gt_hwgui_w.c
      * HB_GTI_WINTITLE support added
 
-2023-02-19 10:21 UTC+0200 José Quintas
+2023-02-19 10:21 UTC+0200 Jose Quintas
    * .github/workflow/checkubuntu.yml
      ! changed to harbour 3.2
    * hwgui.hbp
@@ -1375,7 +1802,7 @@
           missing Harbour function(s): hwg_getupdown()
 
 
-2023-02-09 15:54 UTC+0200 José Quintas
+2023-02-09 15:54 UTC+0200 Jose Quintas
   * source/winapi/draw.c
   * source/winapi/hownbtn.prg
    ! resize icon was not working, ok after to change from DrawIcon() to DrawIconEx()
@@ -1390,7 +1817,7 @@
   * contrib/Readme.txt
     ! Format too long lines
 
-2023-01-29 17:37 UTC+0200 José Quintas
+2023-01-29 17:37 UTC+0200 Jose Quintas
    * .github/workflows/checkubuntu.yml
    * .github/workflows/checkwindows.yml
     ! correction HB_VER_REVID
@@ -1398,7 +1825,7 @@
     ! I use git, sourceforge/github syncronized, but github is not an official address
 
 
-2023-01-29 17:07 UTC+0200 José Quintas
+2023-01-29 17:07 UTC+0200 Jose Quintas
    + .github/workflows/checkubuntu.yml
    + .github/workflows/checkwindows.yml
     ! first try to test compilation under ubuntu and windows on github
@@ -1420,19 +1847,19 @@
     ! (Syntax error)
 
 
-2023-01-26 09:30 UTC+0200 José Quintas
+2023-01-26 09:30 UTC+0200 Jose Quintas
    * source/gtk/*.prg
     | single format source code
     ! change some if;endif and iif() to if/endif block to avoid confusion
 
 
-2023-01-25 21:32 UTC+0200 José Quintas
+2023-01-25 21:32 UTC+0200 Jose Quintas
    * source/winapi/*.prg
     ! single format source code
     ! change some if;endif and iif() to if/endif block to avoid confusion
 
 
-2023-01-24 20:12 UTC+0200 José Quintas
+2023-01-24 20:12 UTC+0200 Jose Quintas
    - test/mixed/dlgempty.prg
    + test/mixed/dlgtextview.prg
    * test/mixed/dlget.prg
@@ -1457,7 +1884,7 @@
     ! Sample program checked for GTK3.
 
 
-2023-01-20 19:06 UTC+0200 José Quintas
+2023-01-20 19:06 UTC+0200 Jose Quintas
    * test/menu.prg
    * test/test.hbp
    + test/dlgget.prg
@@ -1466,7 +1893,7 @@
     ! removed gtwvg.hbc to use harbour gui default
 
 
-2023-01-19 12:36 UTC+0200 José Quintas
+2023-01-19 12:36 UTC+0200 Jose Quintas
    * samples/testget2.prg
     ! removed not used variable, renamed variable
     ! renamed hwg_settimer to avoid confusion about to be hwgui function
@@ -1530,7 +1957,7 @@
 
 2023-01-06 18:55 UTC+0100 Wilfried Brunken DF7BE
   * hwguiGTK3.hbc
-   ! José M. C. Quintas committed [r3189]:
+   ! Jose M. C. Quintas committed [r3189]:
    ! option to do not force gtgui as default
    ! Modification copied for GTK3
 

@@ -66,6 +66,7 @@
 
 STATIC oIni
 STATIC cIniPath, cTutor
+STATIC oFontText
 STATIC oMainMenu, oEditMenu
 STATIC oCurrNode
 STATIC oText, oHighLighter
@@ -98,8 +99,12 @@ FUNCTION Main
    cHwgrunPath := FindHwgrun()
    ReadIni()
    ReadHis()
+   IF Empty( oFontText )
+      oFontText := oFont
+   ENDIF
 
    HBitmap():cPath := cHwg_image_dir
+   hwg_SetResContainer()
 
    INIT WINDOW oMain MAIN TITLE "HwGUI Tutorial" ;
       AT 200, 0 SIZE nInitWidth, nInitHeight FONT oFont ON SIZE bSize ;
@@ -138,7 +143,7 @@ FUNCTION Main
 
    @ 0, 0 OWNERBUTTON oBtnMenu OF oPanel ON CLICK {||ShowMainMenu()} ;
       SIZE 40, oPanel:nHeight FLAT ;
-      BITMAP "menu.bmp" TRANSPARENT COLOR CLR_WHITE TOOLTIP "Menu"
+      BITMAP "menu" FROM RESOURCE TRANSPARENT COLOR CLR_WHITE TOOLTIP "Menu"
    oBtnMenu:aStyle := { oStyle1, oStyle2, oStyle3 }
 
    @ oMain:nWidth-150, 0 OWNERBUTTON OF oPanel ON CLICK {||ChangeFont(oText,2) } ;
@@ -158,13 +163,13 @@ FUNCTION Main
 
    @ 0, 32 TREE oTree SIZE nInitSplitX, oMain:nHeight-oPanel:nHeight ;
       EDITABLE ;
-      BITMAP { "cl_fl.bmp", "op_fl.bmp" } ;
+      BITMAP { "cl_fl", "op_fl" } FROM RESOURCE ;
       ON SIZE {|o,x,y| HB_SYMBOL_UNUSED(x), o:Move( ,,, y-32 ) }
 
    oTree:bDblClick := {|o,oItem| HB_SYMBOL_UNUSED(o),RunSample( oItem ) }
 
    oText := HCEdit():New( oMain, ,, nInitSplitX+4, oPanel:nHeight, ;
-      nInitWidth-nInitSplitX-4, oMain:nHeight-oPanel:nHeight, oFont,, ;
+      nInitWidth-nInitSplitX-4, oMain:nHeight-oPanel:nHeight, oFontText,, ;
       { |o,x,y|o:Move( ,,x - oSplit:nLeft - oSplit:nWidth,y - 32 ) } )
    IF hwg__isUnicode()
       oText:lUtf8 := .T.
@@ -272,10 +277,7 @@ STATIC FUNCTION ReadHis()
             ELSEIF cName == "split"
                nInitSplitX := Val( arr1[2] )
             ELSEIF cName == "font"
-               arr1 := hb_aTokens( arr1[2], ',' )
-               IF Len( arr1 ) == 2
-
-               ENDIF
+               oFontText := HFont():LoadFromStr( arr1[2] )
             ENDIF
          ENDIF
       NEXT
@@ -286,7 +288,7 @@ STATIC FUNCTION ReadHis()
 STATIC FUNCTION WriteHis()
 
    LOCAL s := "theme=" + Ltrim(Str( nCurrTheme,2 )) + Chr(13)+Chr(10) + ;
-      "font=" + oText:oFont:name + "," + Ltrim(Str(oText:oFont:height)) + Chr(13)+Chr(10) + ;
+      "font=" + oText:oFont:SaveToStr() + Chr(13)+Chr(10) + ;
       "size=" + Ltrim(Str(nInitWidth)) + "," + Ltrim(Str(nInitHeight)) + Chr(13)+Chr(10) + ;
       "split=" + Ltrim(Str(Iif(nInitSplitX<10,200,nInitSplitX)))
    hb_MemoWrit( cIniPath + "tutor.his", s )
@@ -319,7 +321,8 @@ STATIC FUNCTION BuildTree( oTree )
                      oNode3 := oNode2:aItems[j1]
                      IF oNode3:title == "module"
                         IF Empty( cTemp := oNode3:GetAttribute( "ver",,"" ) ) .OR. cTemp == cVer
-                           INSERT NODE oTNode CAPTION oNode3:GetAttribute( "name", , "" ) TO oTreeNode2 BITMAP { "book.bmp" } ON CLICK { |o|NodeOut( o ) }
+                           INSERT NODE oTNode CAPTION oNode3:GetAttribute( "name", , "" ) ;
+                              TO oTreeNode2 BITMAP { "book" } ON CLICK { |o|NodeOut( o ) }
                            oTNode:cargo := { .T. , "" }
                            IF Empty( oTNode:cargo[2] := oNode3:GetAttribute( "file",,"" ) )
                               IF !Empty( oNode3:aItems ) .AND. ValType( oNode3:aItems[1] ) == "O"
@@ -335,7 +338,8 @@ STATIC FUNCTION BuildTree( oTree )
                   NEXT
                ELSEIF oNode2:title == "module"
                   IF Empty( cTemp := oNode2:GetAttribute( "ver",,"" ) ) .OR. cTemp == cVer
-                     INSERT NODE oTNode CAPTION oNode2:GetAttribute( "name", , "" ) TO oTreeNode1 BITMAP { "book.bmp" } ON CLICK { |o|NodeOut( o ) }
+                     INSERT NODE oTNode CAPTION oNode2:GetAttribute( "name", , "" ) ;
+                        TO oTreeNode1 BITMAP { "book" } ON CLICK { |o|NodeOut( o ) }
                      oTNode:cargo := { .T. , "" }
                      IF Empty( oTNode:cargo[2] := oNode2:GetAttribute( "file",,"" ) )
                         IF !Empty( oNode2:aItems ) .AND. ValType( oNode2:aItems[1] ) == "O"
@@ -351,7 +355,8 @@ STATIC FUNCTION BuildTree( oTree )
             NEXT
          ELSEIF oNode1:title == "module"
             IF Empty( cTemp := oNode1:GetAttribute( "ver",,"" ) ) .OR. cTemp == cVer
-               INSERT NODE oTNode CAPTION oNode1:GetAttribute( "name", , "" ) TO oTree BITMAP { "book.bmp" } ON CLICK { |o|NodeOut( o ) }
+               INSERT NODE oTNode CAPTION oNode1:GetAttribute( "name", , "" ) ;
+                  TO oTree BITMAP { "book" } ON CLICK { |o|NodeOut( o ) }
                oTNode:cargo := { .T. , "" }
                IF Empty( oTNode:cargo[2] := oNode1:GetAttribute( "file",,"" ) )
                   IF !Empty( oNode1:aItems ) .AND. ValType( oNode1:aItems[1] ) == "O"
@@ -363,11 +368,11 @@ STATIC FUNCTION BuildTree( oTree )
       NEXT
       INSERT NODE oTreeNode1 CAPTION "Drafts" TO oTree ON CLICK { |o|NodeOut( o ) }
       oTreeNode1:cargo := { .F. , "" }
-      INSERT NODE oTNode CAPTION "Draft1" TO oTreeNode1 BITMAP { "book.bmp" } ON CLICK { |o|NodeOut( o ) }
+      INSERT NODE oTNode CAPTION "Draft1" TO oTreeNode1 BITMAP { "book" } ON CLICK { |o|NodeOut( o ) }
       oTNode:cargo := { .T. , "", "" }
-      INSERT NODE oTNode CAPTION "Draft2" TO oTreeNode1 BITMAP { "book.bmp" } ON CLICK { |o|NodeOut( o ) }
+      INSERT NODE oTNode CAPTION "Draft2" TO oTreeNode1 BITMAP { "book" } ON CLICK { |o|NodeOut( o ) }
       oTNode:cargo := { .T. , "", "" }
-      INSERT NODE oTNode CAPTION "Draft3" TO oTreeNode1 BITMAP { "book.bmp" } ON CLICK { |o|NodeOut( o ) }
+      INSERT NODE oTNode CAPTION "Draft3" TO oTreeNode1 BITMAP { "book" } ON CLICK { |o|NodeOut( o ) }
       oTNode:cargo := { .T. , "", "" }
    ENDIF
    IF !Empty( oTree:aItems )
@@ -636,6 +641,7 @@ STATIC FUNCTION SetFont()
 
    IF !Empty( oFont )
       oText:SetFont( oFont )
+      oFontText := oFont
    ENDIF
 
    RETURN Nil

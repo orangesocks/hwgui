@@ -25,29 +25,30 @@
 #define VER_HIGH   1
 #define VER_LOW       0
 #define HEAD_LEN     15
-#define CNT_FIX_LEN  15
+#define CNT_FIX_LEN  15  // A length of a contents item without item name
 
 #define OBJ_NAME      1
 #define OBJ_TYPE      2
-#define OBJ_VAL       3
+#define OBJ_VAL       3  // A position of item's body in a file
 #define OBJ_SIZE      4
-#define OBJ_ADDR      5
+#define OBJ_ADDR      5  // A position of a contents item in a file
 
 STATIC oResCnt
 STATIC cHead := "hwgbc"
 
 CLASS HBinC
 
+   DATA   type        INIT 0
    DATA   cName
    DATA   handle
-   DATA   lWriteAble
+   DATA   lWriteAble  INIT .T.
    DATA   nVerHigh, nVerLow
    DATA   nItems
-   DATA   nCntLen
-   DATA   nCntBlocks
-   DATA   nPassLen
+   DATA   nCntLen     INIT 0
+   DATA   nCntBlocks  INIT 0
+   DATA   nPassLen    INIT 0
 
-   DATA   nFileLen
+   DATA   nFileLen    INIT 0
 
    DATA   aObjects
 
@@ -67,6 +68,16 @@ ENDCLASS
 METHOD Create( cName, n ) CLASS HBinC
 
    IF n == Nil; n := 16; ENDIF
+
+   IF Empty( cName )
+      IF __mvExist( "HWG_RESO_ARR" ) .AND. Valtype( m->hwg_reso_arr ) == "H"
+         ::type := 1
+         ::nItems := Len( m->hwg_reso_arr )
+         RETURN Self
+      ELSE
+         RETURN Nil
+      ENDIF
+   ENDIF
 
    IF ( ::handle := FCreate( cName ) ) == -1
       RETURN Nil
@@ -135,13 +146,16 @@ METHOD Open( cName, lWr ) CLASS HBinC
 
 METHOD Close() CLASS HBinC
 
-   FClose( ::handle )
+   IF ::type == 0
+      FClose( ::handle )
+   ENDIF
 
    RETURN Nil
 
 METHOD Add( cObjName, cType, cVal ) CLASS HBinC
 
    LOCAL nAddress, nSize, cAddress, cSize, nAddr
+   LOCAL cBuf, i
 
    IF !::lWriteAble
       RETURN .F.
@@ -152,16 +166,45 @@ METHOD Add( cObjName, cType, cVal ) CLASS HBinC
       RETURN .F.
    ENDIF
 
-   nAddress := ::nFileLen
-   nSize := Len( cVal )
-   nAddr := Iif( Empty(::aObjects), 0, ::aObjects[Len(::aObjects),OBJ_ADDR] + Len(::aObjects[Len(::aObjects),OBJ_NAME]) + CNT_FIX_LEN )
-   Aadd( ::aObjects, { cObjName, cType, nAddress, nSize, nAddr } )
+   IF ::type == 1
+      hb_hSet( m->hwg_reso_arr, cObjName, { cType, cVal } )
+      Aadd( ::aObjects, { cObjName, cType, 0, Len( cVal ), 0 } )
+      ::nItems ++
+      RETURN .T.
+   ENDIF
 
    IF HEAD_LEN + ::nPassLen + ::nCntLen + Len(cObjName) + CNT_FIX_LEN > ::nCntBlocks*2048
       :: Pack()
       IF HEAD_LEN + ::nPassLen + ::nCntLen + Len(cObjName) + CNT_FIX_LEN > ::nCntBlocks*2048
+         // Resize the content
+         cBuf := Space( ::nFileLen - ::nCntBlocks*2048 )
+         FSeek( ::handle, ::nCntBlocks*2048, FS_SET )
+         FRead( ::handle, @cBuf, Len( cBuf ) )
+         cBuf := Replicate( Chr(0), 2048 ) + cBuf
+         FSeek( ::handle, ::nCntBlocks*2048, FS_SET )
+         FWrite( ::handle, cBuf )
+         FOR i := 1 TO Len( ::aObjects )
+            ::aObjects[i,OBJ_VAL] += 2048
+            nAddr := ::aObjects[i,OBJ_ADDR]
+            FSeek( ::handle, HEAD_LEN + ::nPassLen + nAddr + 1 + ;
+               Len( ::aObjects[i,OBJ_NAME] ) + 4, FS_SET )
+            nAddress := ::aObjects[i,OBJ_VAL]
+            cAddress := Chr( nAddress/16777216 ) + Chr( (nAddress/65536)%256 ) + ;
+               Chr( (nAddress/256)%65536 ) + Chr( nAddress%16777216 )
+            FWrite( ::handle, cAddress )
+         NEXT
+         ::nFileLen += 2048
+         ::nCntBlocks ++
+         FSeek( ::handle, 13, FS_SET )
+         FWrite( ::handle, Chr(::nCntBlocks) )
       ENDIF
    ENDIF
+
+   nAddress := ::nFileLen
+   nSize := Len( cVal )
+   nAddr := Iif( Empty(::aObjects), 0, ::aObjects[Len(::aObjects),OBJ_ADDR] + ;
+      Len(::aObjects[Len(::aObjects),OBJ_NAME]) + CNT_FIX_LEN )
+   Aadd( ::aObjects, { cObjName, cType, nAddress, nSize, nAddr } )
 
    FSeek( ::handle, 0, FS_END )
    FWrite( ::handle, cVal )
@@ -194,6 +237,11 @@ METHOD Del( cObjName ) CLASS HBinC
       RETURN .F.
    ENDIF
 
+   IF ::type == 1
+      hb_hDel( m->hwg_reso_arr, cObjName )
+      RETURN .T.
+   ENDIF
+
    FSeek( ::handle, HEAD_LEN + ::nPassLen + ::aObjects[n,OBJ_ADDR] + 1, FS_SET )
    FWrite( ::handle, Replicate( ' ', Len(cObjName)+4 ) )
    ::aObjects[n,OBJ_NAME] := ::aObjects[n,OBJ_TYPE] := ""
@@ -208,6 +256,10 @@ METHOD Pack() CLASS HBinC
 
    IF !::lWriteAble
       RETURN .F.
+   ENDIF
+
+   IF ::type == 1
+      RETURN .T.
    ENDIF
 
    Aeval( ::aObjects, {|a| Iif(!Empty(a[OBJ_NAME]), (nItems++,nCntLen+=Len(a[OBJ_NAME])+CNT_FIX_LEN),.T.) } )
@@ -267,6 +319,15 @@ METHOD Get( cObjName ) CLASS HBinC
    LOCAL n, cBuf
 
    cObjName := Lower( cObjName )
+
+   IF ::type == 1
+      IF hb_hHaskey( m->hwg_reso_arr, cObjName )
+         RETURN m->hwg_reso_arr[ cObjName ][2]
+      ELSE
+         RETURN Nil
+      ENDIF
+   ENDIF
+
    IF ( n := Ascan( ::aObjects, {|a|a[OBJ_NAME] == cObjName} ) ) == 0
       RETURN Nil
    ENDIF
@@ -322,6 +383,10 @@ FUNCTION hwg_SetResContainer( cName )
       IF !Empty( oResCnt )
          oResCnt:Close()
          oResCnt := Nil
+      ENDIF
+      IF __mvExist( "HWG_RESO_ARR" ) .AND. Valtype( m->hwg_reso_arr ) == "H"
+         oResCnt := HBinC():Create()
+         RETURN .T.
       ENDIF
    ELSE
       IF Empty( oResCnt := HBinC():Open( cName ) )

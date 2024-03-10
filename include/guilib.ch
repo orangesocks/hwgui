@@ -7,7 +7,7 @@
 /* For note of latest official release version number */
 #define HWG_VERSION         "2.23 dev"
 /* For note of latest official release build */
-#define HWG_BUILD               7
+#define HWG_BUILD               8
 /* ----- End of HWGUI version definition ----- */
 
 #define	WND_MAIN                1
@@ -517,10 +517,11 @@
             [ ON CLICK <bClick> ]      ;
             [ STYLE <nStyle> ]         ;
             [ FONT <oFont> ]           ;
+            [ IMAGE <oImg> ]           ;
             [ TOOLTIP <ctoolt> ]       ;
           => ;
     [<oBut> := ] HButton():New( <oWnd>,<nId>,<nStyle>,<x>,<y>,<width>, ;
-             <height>,<caption>,<oFont>,<bInit>,<bSize>,<bDraw>,<bClick>,<ctoolt>,<color>,<bcolor> );
+             <height>,<caption>,<oFont>,<bInit>,<bSize>,<bDraw>,<bClick>,<ctoolt>,<color>,<bcolor>,<oImg> );
     [; hwg_SetCtrlName( <oBut>,<(oBut)> )]
 
 #xcommand REDEFINE BUTTON [ <oBut> ]   ;
@@ -1134,12 +1135,13 @@
             [ BACKCOLOR <bcolor> ]     ;
             [ FONT <oFont> ]           ;
             [ INIT  <dValue> ]         ;
+            [ ON LOSTFOCUS <bLfocus> ] ;
             [ ON SIZE <bSize> ]        ;
             [ ON PAINT <bDraw> ]       ;
             [ ON CHANGE <bChange> ]    ;
           => ;
     [<oDate> := ] HDateSelect():New( <oWnd>,<nId>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
-        <oFont>,<dValue>,<bSize>,<bDraw>,<bChange> );
+        <oFont>,<dValue>,,<bLfocus>,<bSize>,<bDraw>,<bChange> );
     [; hwg_SetCtrlName( <oDate>,<(oDate)> )]
 
 #xcommand @ <x>,<y> SPLITTER [ <oSplit> ] ;
@@ -1345,6 +1347,21 @@
                     <oFont>,<bInit>,<bGfocus>,<bLfocus>,<bChange>,<ctoolt>,<color>,<bcolor> );
     [; hwg_SetCtrlName( <oPick>,<(oPick)> )]
 
+#xcommand @ <x>,<y> GET DATESELECT [ <oDate> VAR ] <vari> ;
+            [ OF <oWnd> ]              ;
+            [ ID <nId> ]               ;
+            [ SIZE <width>, <height> ] ;
+            [ COLOR <color> ]          ;
+            [ BACKCOLOR <bcolor> ]     ;
+            [ FONT <oFont> ]           ;
+            [ VALID <bLfocus> ]        ;
+            [ ON SIZE <bSize> ]        ;
+            [ ON PAINT <bDraw> ]       ;
+            [ ON CHANGE <bChange> ]    ;
+          => ;
+    [<oDate> := ] HDateSelect():New( <oWnd>,<nId>,<x>,<y>,<width>,<height>,<color>,<bcolor>, ;
+        <oFont>,<vari>,{|v|Iif(v==Nil,<vari>,<vari>:=v)},<bLfocus>,<bSize>,<bDraw>,<bChange> );
+    [; hwg_SetCtrlName( <oDate>,<(oDate)> )]
 
 #xcommand SAY <value> TO <oDlg> ID <id> ;
           => ;

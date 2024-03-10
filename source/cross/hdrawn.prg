@@ -41,7 +41,7 @@ CLASS HDrawn INHERIT HObject
    DATA nMouseOn      INIT 0
    DATA cTooltip, oTooltip
 
-   DATA bPaint, bClick, bChgState, bSize
+   DATA bPaint, bPaintItem, bClick, bChgState, bSize
    DATA Anchor        INIT 0
 
    METHOD New( oWndParent, nLeft, nTop, nWidth, nHeight, tcolor, bColor, aStyles, ;
@@ -192,6 +192,7 @@ METHOD Paint( hDC ) CLASS HDrawn
             hwg_Rectangle( hDC, ::nLeft, ::nTop, ::nLeft+::nWidth-1, ::nTop+::nHeight-1, ::oPen:handle )
          ENDIF
       ENDIF
+
       IF !Empty( ::title )
          hwg_Settransparentmode( hDC, .T. )
          hwg_Settextcolor( hDC, ::tColor )
@@ -212,6 +213,9 @@ METHOD Paint( hDC ) CLASS HDrawn
                ::nLeft+::nWidth-::aMargin[3], ::nTop+::nHeight-::aMargin[4], ::nTextStyle )
          ENDIF
          hwg_Settransparentmode( hDC, .F. )
+      ENDIF
+      IF !Empty( ::bPaintItem )
+         Eval( ::bPaintItem, Self, hDC )
       ENDIF
    ENDIF
 
@@ -418,12 +422,14 @@ METHOD Show( cText, xPos, yPos ) CLASS HDrawnTT
          arr := hwg_GetTextSize( hDC, arrt[i] )
          nw := Max( nw, arr[1] + 8 ); nh := Max( nh, arr[2] + 4 )
       NEXT
-      ::nHeight := (nh-2) * Len( arrt ) + 2
+      ::nHeight := (nh-2) * Len( arrt )
    ELSE
       arr := hwg_GetTextSize( hDC, cText )
       nw := arr[1] + 8; nh := arr[2] + 4
       ::nHeight := nh
    ENDIF
+   ::nHeight := nh := ::nHeight + ::aMargin[2] + ::aMargin[4]
+   nw += ::aMargin[1] + ::aMargin[3]
    hwg_Releasedc( oBoa:handle, hDC )
 
    FOR i := 1 TO Len( ::oParent:aDrawn )
@@ -643,3 +649,143 @@ METHOD SetGroupValue( nVal ) CLASS HDrawnRadio
    ENDIF
 
    RETURN 0
+
+CLASS HDrawnArrow INHERIT HDrawn
+
+   DATA nDirection
+   DATA oBrushArrow
+   DATA nw, nh
+   DATA bAct
+
+   DATA  oTimer
+   DATA  nPeriod      INIT 0
+
+   METHOD New( oWndParent, nLeft, nTop, nWidth, nHeight, tcolor, bColor, aStyles, ;
+      nDirection, nPeriod, bPaint, bClick, bChgState )
+   METHOD Paint( hDC )
+   METHOD onMouseMove( xPos, yPos )
+   METHOD onMouseLeave()
+   METHOD onButtonDown( msg, xPos, yPos )
+   METHOD onButtonUp( xPos, yPos )
+
+ENDCLASS
+
+METHOD New( oWndParent, nLeft, nTop, nWidth, nHeight, tcolor, bColor, aStyles, ;
+      nDirection, nPeriod, bPaint, bClick, bChgState ) CLASS HDrawnArrow
+
+   ::Super:New( oWndParent, nLeft, nTop, nWidth, nHeight, tcolor, bColor, aStyles, ;
+      '',, bPaint,, bChgState )
+
+   ::nDirection := Iif( Empty(nDirection) .OR. nDirection > 4, 1, nDirection )
+   ::nPeriod := Iif( Empty(nPeriod), 0, nPeriod )
+   ::oBrushArrow := HBrush():Add( ::tColor )
+   ::bAct := bClick
+
+   RETURN Self
+
+METHOD Paint( hDC ) CLASS HDrawnArrow
+
+   STATIC bPaintItem := { | o, h | PaintArrow( o, h ) }
+
+   IF Empty( ::bPaintItem )
+      ::bPaintItem := bPaintItem
+   ENDIF
+   ::Super:Paint( hDC )
+
+   RETURN Nil
+
+METHOD onMouseMove( xPos, yPos ) CLASS HDrawnArrow
+
+   IF ::nState == STATE_PRESSED
+      IF !( xPos > ::nLeft .AND. xPos < ::nLeft + ::nWidth .AND. ;
+         yPos > ::nTop .AND. yPos < ::nTop + ::nHeight )
+         ::nState := STATE_NORMAL
+         ::Refresh()
+         IF !Empty( ::oTimer )
+            ::oTimer:End()
+            ::oTimer := Nil
+         ENDIF
+      ENDIF
+   ENDIF
+
+   RETURN ::Super:onMouseMove( xPos, yPos )
+
+METHOD onMouseLeave() CLASS HDrawnArrow
+
+   ::onButtonUp()
+   RETURN ::Super:onMouseLeave()
+
+METHOD onButtonDown( msg, xPos, yPos ) CLASS HDrawnArrow
+
+   IF msg == WM_LBUTTONDOWN
+      IF xPos > ::nLeft .AND. xPos < ::nLeft + ::nWidth .AND. yPos > ::nTop .AND. ;
+         yPos < ::nTop + ::nHeight
+         ::nState := STATE_PRESSED
+
+         IF !Empty( ::bAct )
+            Eval( ::bAct, Self )
+            IF ::nPeriod > 0
+               ::oTimer := HTimer():New( ::GetParentBoard(),, ::nPeriod, ;
+                  {|ot| HB_SYMBOL_UNUSED(ot),ArrowTimerProc(Self) } )
+               ::oTimer:cargo := 4
+            ENDIF
+         ENDIF
+      ENDIF
+   ENDIF
+   RETURN Nil
+
+METHOD onButtonUp( xPos, yPos ) CLASS HDrawnArrow
+
+   HB_SYMBOL_UNUSED(xPos)
+   HB_SYMBOL_UNUSED(yPos)
+
+   IF ::nState == STATE_PRESSED
+      ::nState := STATE_NORMAL
+      ::Refresh()
+   ENDIF
+   IF !Empty( ::oTimer )
+      ::oTimer:End()
+      ::oTimer := Nil
+   ENDIF
+
+   RETURN Nil
+
+STATIC FUNCTION ArrowTimerProc( o )
+
+   IF o:oTimer:cargo > 0
+      o:oTimer:cargo --
+      RETURN Nil
+   ENDIF
+   Eval( o:bAct, o )
+
+   RETURN Nil
+
+STATIC FUNCTION PaintArrow( o, h )
+
+   LOCAL nh := Iif( Empty(o:nh), Max( 4, Int( Iif(o:nDirection==1.OR.o:nDirection==3,o:nWidth,o:nHeight)/2.4 ) ), o:nh )
+   LOCAL nw := Iif( Empty(o:nw), Int(nh/1.2), Int(o:nw/2) )
+   LOCAL nt, nl
+
+   IF o:nDirection == 1 .OR. o:nDirection == 3
+      nt := Int( o:nHeight/2 )
+      nl := Int( (o:nWidth-nh)/2 )
+      IF o:nDirection == 1
+         hwg_Triangle_Filled( h, o:nLeft+nl, o:nTop+nt, o:nLeft+nl+nh, o:nTop+nt-nw, ;
+            o:nLeft+nl+nh, o:nTop+nt+nw, .F., o:oBrushArrow:handle )
+      ELSE
+         hwg_Triangle_Filled( h, o:nLeft+o:nWidth-nl, o:nTop+nt, o:nLeft+o:nWidth-nl-nh, o:nTop+nt-nw, ;
+            o:nLeft+o:nWidth-nl-nh, o:nTop+nt+nw, .F., o:oBrushArrow:handle )
+      ENDIF
+   ELSE
+      nt := Int( o:nWidth/2 )
+      nl := Int( (o:nHeight-nh)/2 )
+      IF o:nDirection == 2
+         hwg_Triangle_Filled( h, o:nLeft+nt, o:nTop+nl, o:nLeft+nt-nw, o:nTop+nl+nh, ;
+            o:nLeft+nt+nw, o:nTop+nl+nh, .F., o:oBrushArrow:handle )
+      ELSE
+         hwg_Triangle_Filled( h, o:nLeft+nt, o:nTop+o:nHeight-nl, o:nLeft+nt-nw, o:nTop+o:nHeight-nl-nh, ;
+            o:nLeft+nt+nw, o:nTop+o:nHeight-nl-nh, .F., o:oBrushArrow:handle )
+      ENDIF
+   ENDIF
+
+   RETURN Nil

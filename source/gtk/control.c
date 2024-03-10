@@ -32,17 +32,19 @@
 /* Avoid warnings from GCC */
 #include "warnings.h"
 
-
-
 #define SS_CENTER           1
 #define SS_RIGHT            2
 #define ES_PASSWORD 32
 #define ES_MULTILINE        4
 #define ES_READONLY      2048
+#define ES_CENTER           1
+#define ES_RIGHT            2
 
 #define BS_AUTO3STATE       6
 #define BS_GROUPBOX         7
 #define BS_AUTORADIOBUTTON  9
+
+#define TCS_BOTTOM          2
 
 #define SS_OWNERDRAW        13
 
@@ -204,11 +206,11 @@ HB_FUNC( HWG_STATIC_GETTEXT )
 */
 HB_FUNC( HWG_CREATEBUTTON )
 {
-   GtkWidget *hCtrl, *img;
+   GtkWidget *hCtrl;
    HB_ULONG ulStyle = hb_parnl( 3 );
    const char *cTitle = ( hb_pcount(  ) > 7 ) ? hb_parc( 8 ) : "";
    GtkFixed *box;
-   PHWGUI_PIXBUF szFile =
+   PHWGUI_PIXBUF hImg =
          HB_ISPOINTER( 9 ) ? ( PHWGUI_PIXBUF ) HB_PARHANDLE( 9 ) : NULL;
    gchar *gcTitle = hwg_convert_to_utf8( cTitle );
 
@@ -226,13 +228,14 @@ HB_FUNC( HWG_CREATEBUTTON )
    else
       hCtrl = gtk_button_new_with_mnemonic( gcTitle );
 
-#if GTK_CHECK_VERSION(2,4,1)
-   if( szFile )
+//#if GTK_CHECK_VERSION(2,4,1)
+   if( hImg )
    {
-      img = gtk_image_new_from_pixbuf( szFile->handle );
-      gtk_button_set_image( GTK_BUTTON( hCtrl ), img );
+      GtkSettings *default_settings = gtk_settings_get_default();
+      g_object_set(default_settings, "gtk-button-images", TRUE, NULL);
+      gtk_button_set_image( GTK_BUTTON( hCtrl ), gtk_image_new_from_pixbuf( hImg->handle ) );
    }
-#endif
+//#endif
    g_free( gcTitle );
    box = getFixedBox( ( GObject * ) HB_PARHANDLE( 1 ) );
    if( box )
@@ -241,6 +244,21 @@ HB_FUNC( HWG_CREATEBUTTON )
 
    HB_RETHANDLE( hCtrl );
 }
+
+HB_FUNC( HWG_BUTTON_SETIMAGE )
+{
+   GtkWidget *hCtrl = ( GtkWidget * ) HB_PARHANDLE( 1 );
+   PHWGUI_PIXBUF hImg =
+         HB_ISPOINTER( 2 ) ? ( PHWGUI_PIXBUF ) HB_PARHANDLE( 2 ) : NULL;
+
+   if( hImg )
+   {
+      GtkSettings *default_settings = gtk_settings_get_default();
+      g_object_set(default_settings, "gtk-button-images", TRUE, NULL);
+      gtk_button_set_image( GTK_BUTTON( hCtrl ), gtk_image_new_from_pixbuf( hImg->handle ) );
+   }
+}
+
 
 HB_FUNC( HWG_BUTTON_SETTEXT )
 {
@@ -292,6 +310,8 @@ HB_FUNC( HWG_CREATEEDIT )
       hCtrl = gtk_entry_new(  );
       if( ulStyle & ES_PASSWORD )
          gtk_entry_set_visibility( ( GtkEntry * ) hCtrl, FALSE );
+      if( ulStyle & ES_RIGHT )
+         gtk_entry_set_alignment( ( GtkEntry * ) hCtrl, 1 );
    }
 
    GtkFixed *box = getFixedBox( ( GObject * ) HB_PARHANDLE( 1 ) );
@@ -313,8 +333,9 @@ HB_FUNC( HWG_CREATEEDIT )
       g_free( gcTitle );
    }
 
-   gtk_widget_add_events( hCtrl, GDK_BUTTON_PRESS_MASK );
+   gtk_widget_add_events( hCtrl, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK );
    set_event( ( gpointer ) hCtrl, "button_press_event", 0, 0, 0 );
+   set_event( ( gpointer ) hCtrl, "button_release_event", 0, 0, 0 );
 
    all_signal_connect( ( gpointer ) hCtrl );
    HB_RETHANDLE( hCtrl );
@@ -750,6 +771,9 @@ HB_FUNC( HWG_CREATETABCONTROL )
    if( box )
       gtk_fixed_put( box, hCtrl, hb_parni( 4 ), hb_parni( 5 ) );
    gtk_widget_set_size_request( hCtrl, hb_parni( 6 ), hb_parni( 7 ) );
+   gtk_notebook_set_scrollable( (GtkNotebook*) hCtrl, 1 );
+   if( hb_parni(3) & TCS_BOTTOM )
+      gtk_notebook_set_tab_pos( (GtkNotebook*) hCtrl, GTK_POS_BOTTOM );
 
    g_signal_connect( hCtrl, "switch-page",
                       G_CALLBACK (cb_signal_tab), NULL );
@@ -1441,14 +1465,18 @@ HB_FUNC( HWG_SETFGCOLOR )
 
    if( label )
    {
-      /*
-      GtkStyle * style = gtk_style_copy( gtk_widget_get_style( label ) );
-      hwg_parse_color( hColor, &(style->fg[iType]) );
-      hwg_parse_color( hColor, &(style->text[iType]) );
-      gtk_widget_set_style( label, style );
-      */
       hwg_parse_color( hColor, &color );
-      gtk_widget_modify_fg( label, iType, &color );
+      if( GTK_IS_ENTRY( hCtrl ) )
+      {
+         GtkStyle * style = gtk_style_copy( gtk_widget_get_style( hCtrl ) );
+         hwg_parse_color( hColor, &(style->fg[GTK_STATE_NORMAL]) );
+         hwg_parse_color( hColor, &(style->text[GTK_STATE_NORMAL]) );
+         gtk_widget_set_style( hCtrl, style );
+         //gtk_widget_modify_text( label, iType, &color );
+      }
+      else
+         gtk_widget_modify_fg( label, iType, &color );
+
    }
 }
 
@@ -1458,15 +1486,17 @@ HB_FUNC( HWG_SETBGCOLOR )
    HB_ULONG hColor = hb_parnl( 2 );
    GdkColor color;
 
-   /*
-   GtkStyle * style = gtk_style_copy( gtk_widget_get_style( hCtrl ) );
-   hwg_parse_color( hColor, &(style->bg[GTK_STATE_NORMAL]) );
-   hwg_parse_color( hColor, &(style->base[GTK_STATE_NORMAL]) );
-   gtk_widget_set_style( hCtrl, style );
-   */
    hwg_parse_color( hColor, &color );
-   gtk_widget_modify_bg( hCtrl, GTK_STATE_NORMAL, &color );
-
+   if( GTK_IS_ENTRY( hCtrl ) )
+   {
+      GtkStyle * style = gtk_style_copy( gtk_widget_get_style( hCtrl ) );
+      hwg_parse_color( hColor, &(style->bg[GTK_STATE_NORMAL]) );
+      hwg_parse_color( hColor, &(style->base[GTK_STATE_NORMAL]) );
+      gtk_widget_set_style( hCtrl, style );
+      //gtk_widget_modify_base( hCtrl, GTK_STATE_NORMAL, &color );
+   }
+   else
+      gtk_widget_modify_bg( hCtrl, GTK_STATE_NORMAL, &color );
 }
 
 #else
